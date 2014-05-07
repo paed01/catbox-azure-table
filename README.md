@@ -3,6 +3,11 @@ catbox-azure-table
 
 Azure Storage table adapter for catbox
 
+Install **catbox-azure-table**:
+```
+npm install catbox-azure-table
+```
+
 ### Options
 
 - `connection` - the Azure storage connection string. Defaults to `UseDevelopmentStorage=true;DevelopmentStorageProxyUri=http://127.0.0.1;`.
