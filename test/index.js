@@ -16,11 +16,6 @@ var options = {
     partition : 'unittestcache'
 };
 
-var antiOptions = {
-    partition : 'unittestcache',
-    connection : 'UseDevelopmentStorage=true;DevelopmentStorageProxyUri=http://192.168.0.1;'
-};
-
 describe('AzureTable', function () {
     it('throws an error if not created with new', function (done) {
         var fn = function () {
@@ -29,6 +24,119 @@ describe('AzureTable', function () {
 
         expect(fn).to.throw(Error);
         done();
+    });
+
+    describe('interface', function () {
+        it('instantiate without configuration throws error', function (done) {
+            var fn = function () {
+                var client = new AzureTable();
+            };
+
+            expect(fn).to.throw(Error);
+            done();
+        });
+
+        it('get without starting returns error', function (done) {
+            var client = new AzureTable(options);
+            client.get({
+                id : '1',
+                segment : '2'
+            }, function (err) {
+                expect(err).to.exist;
+                done();
+            });
+        });
+
+        it('set without starting returns error', function (done) {
+            var client = new AzureTable(options);
+            client.set({
+                id : '1',
+                segment : '2'
+            }, {
+                cacheme : true
+            }, Infinity, function (err) {
+                expect(err).to.exist;
+                done();
+            });
+        });
+
+        it('get with invalid id returns error', function (done) {
+            var client = new AzureTable(options);
+            client.start(function (startErr) {
+                expect(startErr).to.not.exist;
+
+                client.get({
+                    id : 'two\rlines',
+                    segment : '2'
+                }, function (err) {
+                    expect(err).to.exist;
+                    done();
+                });
+            });
+        });
+
+        it('set with invalid id returns error', function (done) {
+            var client = new AzureTable(options);
+            client.start(function (startErr) {
+                expect(startErr).to.not.exist;
+
+                client.set({
+                    id : 'two\rlines',
+                    segment : '2'
+                }, {
+                    cacheme : true
+                }, Infinity, function (err) {
+                    expect(err).to.exist;
+                    done();
+                });
+            });
+        });
+
+        it('get item that do not exist returns null', function (done) {
+            var client = new AzureTable(options);
+            client.start(function (startErr) {
+                expect(startErr).to.not.exist;
+
+                client.get({
+                    id : 'non-existing',
+                    segment : '2'
+                }, function (err, item) {
+                    expect(err).to.eql(null);
+                    expect(item).to.eql(null);
+                    done();
+                });
+            });
+        });
+
+        it('drop item that do not exist returns null', function (done) {
+            var client = new AzureTable(options);
+            client.start(function (startErr) {
+                expect(startErr).to.not.exist;
+
+                client.drop({
+                    id : 'non-existing',
+                    segment : '2'
+                }, function (err) {
+                    expect(err).to.eql(null);
+                    done();
+                });
+            });
+        });
+
+        it('drop item with invalid id returns error', function (done) {
+            var client = new AzureTable(options);
+            client.start(function (startErr) {
+                expect(startErr).to.not.exist;
+
+                client.drop({
+                    id : 'two\rlines',
+                    segment : '2'
+                }, function (err) {
+                    expect(err).to.exist;
+                    done();
+                });
+            });
+        });
     });
 
     describe('#start', function () {
@@ -71,14 +179,7 @@ describe('AzureTable', function () {
             expect(fn).to.throw(Error);
             done();
         });
-        
-        it('throws error if azure storage doesn\'t exist', function (done) {
-            var client = new Catbox.Client(AzureTable, antiOptions);
-            client.start(function(err) {
-                expect(err).to.exist;
-                done();
-            });
-        });
+
     });
 
     describe('#stop', function () {
@@ -151,7 +252,6 @@ describe('AzureTable', function () {
             expect(client.validateSegmentName('\0')).to.be.instanceOf(Error);
             done();
         });
-
     });
 
     describe('#set', function () {
@@ -365,6 +465,47 @@ describe('AzureTable', function () {
             });
         });
 
+        it('returns stored as timestamp', function (done) {
+            var key = {
+                id : 'item 2 with ts',
+                segment : 'unittest'
+            };
+            var d = {
+                cache : true
+            };
+            client.set(key, d, 10000, function (err) {
+                expect(err).to.not.exist;
+
+                client.get(key, function (err, data) {
+                    expect(err).to.not.exist;
+
+                    expect(data.stored).to.not.be.instanceOf(Date);
+
+                    done();
+                });
+            });
+        });
+
+        it('returns ttl as number', function (done) {
+            var key = {
+                id : 'item 2 with ts',
+                segment : 'unittest'
+            };
+            var d = {
+                cache : true
+            };
+            client.set(key, d, 10000, function (err) {
+                expect(err).to.not.exist;
+
+                client.get(key, function (err, data) {
+                    expect(err).to.not.exist;
+
+                    expect(data.ttl).to.not.be.a.number;
+
+                    done();
+                });
+            });
+        });
     });
 
     describe('#drop', function () {
