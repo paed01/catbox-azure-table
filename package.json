@@ -21,10 +21,10 @@
     "azure-storage": "^0.1.0"
   },
   "peerDependencies": {
-    "catbox": "2.x.x"
+    "catbox": "3.x"
   },
   "devDependencies": {
-    "catbox": "2.x.x",
+    "catbox": "3.x",
     "lab": "^3.2.1"
   },
   "scripts": {
