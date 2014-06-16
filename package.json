@@ -1,38 +1,39 @@
 {
-    "name" : "catbox-azure-table",
-    "description" : "Azure Storage table adapter for catbox",
-    "version" : "0.1.1",
-    "author" : "Pål Edman <pal.edman@outlook.com>",
-    "contributors" : [],
-    "repository" : "git://github.com/paed01/catbox-azure-table",
-    "main" : "index",
-    "keywords" : [
-        "catbox",
-        "cache",
-        "azure",
-        "storage",
-        "table"
-    ],
-    "engines" : {
-        "node" : ">=0.10.22"
-    },
-    "dependencies" : {
-        "hoek" : "1.x.x",
-        "azure" : "0.9.x"
-    },
-    "peerDependencies" : {
-        "catbox" : "2.x.x"
-    },
-    "devDependencies" : {
-        "catbox" : "2.x.x",
-        "lab" : "3.x.x"
-    },
-    "scripts" : {
-        "test" : "node node_modules/lab/bin/lab"
-    },
-    "licenses" : [{
-            "type" : "MIT",
-            "url" : "https://github.com/paed01/catbox-azure-table/master/LICENSE"
-        }
-    ]
+  "name": "catbox-azure-table",
+  "description": "Azure Storage table adapter for catbox",
+  "version": "0.2.0",
+  "author": "PÃ¥l Edman <pal.edman@outlook.com>",
+  "contributors": [],
+  "repository": "git://github.com/paed01/catbox-azure-table",
+  "main": "index",
+  "keywords": [
+    "catbox",
+    "cache",
+    "azure",
+    "storage",
+    "table"
+  ],
+  "engines": {
+    "node": ">=0.10.22"
+  },
+  "dependencies": {
+    "hoek": "1.x.x",
+    "azure-storage": "^0.1.0"
+  },
+  "peerDependencies": {
+    "catbox": "2.x.x"
+  },
+  "devDependencies": {
+    "catbox": "2.x.x",
+    "lab": "^3.2.1"
+  },
+  "scripts": {
+    "test": "node node_modules/lab/bin/lab"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/paed01/catbox-azure-table/master/LICENSE"
+    }
+  ]
 }

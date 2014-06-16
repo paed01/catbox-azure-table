@@ -1,6 +1,7 @@
 /*jshint expr:true es5:true */
 
 var Catbox = require('catbox');
+var AzureStorage = require('azure-storage');
 
 var Lab = require('lab');
 var AzureTable = require('..');
@@ -309,6 +310,10 @@ describe('AzureTable', function () {
                 };
                 client.set(key, d2, 10000, function (err) {
                     client.get(key, function (err, data) {
+                        if (err) {
+                            console.log(err.stack);
+                        }
+                    
                         expect(err).to.not.exist;
 
                         expect(data).to.exist;
@@ -446,11 +451,12 @@ describe('AzureTable', function () {
                 id : 'Wrongly formatted 1',
                 segment : 'unittest'
             };
+            var entGen = AzureStorage.TableUtilities.entityGenerator;
             var insertData = {
-                PartitionKey : key.segment,
-                RowKey : key.id,
-                item : '[Object weee]',
-                ttl : 10
+                PartitionKey : entGen.String(key.segment),
+                RowKey : entGen.String(key.id),
+                item : entGen.String('[Object weee]'),
+                ttl : entGen.Int64(10)
             };
 
             client.connection.client.insertOrMergeEntity(client.connection.tableName, insertData, function (err) {
