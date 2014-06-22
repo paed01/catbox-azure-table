@@ -1,6 +1,8 @@
 catbox-azure-table
 ===========
 
+[![Dependency Status](https://david-dm.org/paed01/catbox-azure-table.png)](https://david-dm.org/paed01/catbox-azure-table)
+
 Azure Storage table adapter for [catbox](https://github.com/spumko/catbox)
 
 Install **catbox-azure-table**:
