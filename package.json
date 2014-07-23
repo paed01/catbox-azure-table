@@ -1,7 +1,7 @@
 {
   "name": "catbox-azure-table",
-  "description": "Azure Storage table adapter for catbox",
-  "version": "0.3.0",
+  "description": "Azure Table Storage adapter for catbox",
+  "version": "0.3.1",
   "author": "Pål Edman <pal.edman@outlook.com>",
   "contributors": [],
   "repository": "git://github.com/paed01/catbox-azure-table",
@@ -17,14 +17,14 @@
     "node": ">=0.10.22"
   },
   "dependencies": {
-    "azure-storage": "0.2.0",
-    "hoek": "2.x.x"
+    "azure-storage": "0.3.x >0.3.0",
+    "hoek": "2.x.x",
+    "async": "0.9.x"
   },
   "peerDependencies": {
     "catbox": "3.x"
   },
   "devDependencies": {
-    "async": "^0.9.0",
     "catbox": "3.x.x",
     "lab": "3.x.x"
   },
@@ -34,7 +34,7 @@
   "licenses": [
     {
       "type": "MIT",
-      "url": "https://github.com/paed01/catbox-azure-table/master/LICENSE"
+      "url": "https://github.com/paed01/catbox-azure-table/raw/master/LICENSE"
     }
   ]
 }
