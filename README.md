@@ -1,7 +1,7 @@
 catbox-azure-table
 ===========
 
-[![Dependency Status](https://david-dm.org/paed01/catbox-azure-table.png)](https://david-dm.org/paed01/catbox-azure-table)
+[![Build status](https://ci.appveyor.com/api/projects/status/anrkvdxmentpi1e5/branch/master)](https://ci.appveyor.com/project/paed01/catbox-azure-table/branch/master) [![Dependency Status](https://david-dm.org/paed01/catbox-azure-table.png)](https://david-dm.org/paed01/catbox-azure-table)
 
 Azure Table Storage adapter for [catbox](https://github.com/spumko/catbox)
 
