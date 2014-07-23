@@ -12,7 +12,8 @@ install:
 build: off
 
 before_test:
-  - cmd: "C:\Program Files (x86)\Microsoft SDKs\Windows Azure\Storage Emulator\WAStorageEmulator.exe" start
+  - ps: '"C:\Program Files (x86)\Microsoft SDKs\Windows Azure\Storage Emulator\WAStorageEmulator.exe" start'
+  - cmd: '"C:\Program Files (x86)\Microsoft SDKs\Windows Azure\Storage Emulator\WAStorageEmulator.exe" start'
 
 test_script:
   - node --version
