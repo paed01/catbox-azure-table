@@ -12,7 +12,7 @@ install:
 build: off
 
 before_test:
-  - ps: 'ls "${Env:ProgramFiles(x86)}\Microsoft SDKs"'
+  - ps: 'ls "${Env:ProgramFiles(x86)}\Microsoft SDKs\Windows Azure"'
   - ps: '& "${Env:ProgramFiles(x86)}\Microsoft SDKs\Windows Azure\Storage Emulator\WAStorageEmulator.exe" start'
 #  - cmd: '"C:\Program Files (x86)\Microsoft SDKs\Windows Azure\Storage Emulator\WAStorageEmulator.exe" start'
 
