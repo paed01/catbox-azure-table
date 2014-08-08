@@ -8,11 +8,13 @@ var Lab = require('lab');
 var AzureTable = require('..');
 
 var expect = Lab.expect;
-var before = Lab.before;
+
+var lab = exports.lab = Lab.script();
+var before = lab.before;
 // var beforeEach = Lab.beforeEach;
-var after = Lab.after;
-var describe = Lab.experiment;
-var it = Lab.test;
+var after = lab.after;
+var describe = lab.experiment;
+var it = lab.test;
 
 var options = {
 	partition : 'unittestcache',

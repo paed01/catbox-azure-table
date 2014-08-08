@@ -1,6 +1,5 @@
 /*jshint expr:true es5:true */
 
-var Catbox = require('catbox');
 var AzureStorage = require('azure-storage');
 var async = require('async');
 
@@ -9,12 +8,14 @@ var AzureTable = require('..');
 var Gc = AzureTable.Gc;
 
 var expect = Lab.expect;
+
+var lab = exports.lab = Lab.script();
 // var before = Lab.before;
-var beforeEach = Lab.beforeEach;
-var after = Lab.after;
-var afterEach = Lab.afterEach;
-var describe = Lab.experiment;
-var it = Lab.test;
+var beforeEach = lab.beforeEach;
+var after = lab.after;
+var afterEach = lab.afterEach;
+var describe = lab.experiment;
+var it = lab.test;
 
 var options = {
 	partition : 'unittestcachegc',
