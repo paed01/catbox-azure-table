@@ -23,4 +23,5 @@ test_script:
   - npm test
 
 after_test:
+  - git checkout -qf master
   - codeclimate < coverage.lcov
