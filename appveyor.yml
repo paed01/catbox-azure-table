@@ -24,4 +24,7 @@ test_script:
 
 after_test:
   - git checkout -qf master
+  - git status
+  - git log -1 --pretty=format:'%H'
+  - git log -1 --pretty=format:'%ct'
   - codeclimate < coverage.lcov
