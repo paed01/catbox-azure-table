@@ -6,6 +6,7 @@ environment:
     - nodejs_version: 0.10
   CODECLIMATE_REPO_TOKEN:
     secure: +dPx4KAE5xmYZBHquqBpuUnc5Rc/GKpydqfpst4eGfAD8MSTW+1Vuru+6QSnZVHMOi1ZlPZ5eK6QIP/7JpIMYr1VB92p/MifAWK0HHQODus=
+  TERM: msys
 
 install:
   - ps: Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version)
