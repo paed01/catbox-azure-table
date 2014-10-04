@@ -28,4 +28,7 @@ after_test:
   - git status
   - ps: 'git log -1 --pretty=format:"%H"'
   - ps: 'git log -1 --pretty=format:"%ct"'
+  - ps: '$env:JENKINS_URL=”true”'
+  - ps: '$env:GIT_BRANCH=”master”'
+  - ps: '$env:GIT_COMMIT=”${Env:APPVEYOR_REPO_COMMIT}”'
   - codeclimate < coverage.lcov
