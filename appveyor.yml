@@ -10,6 +10,7 @@ environment:
 
 install:
   - ps: Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version)
+  - npm install -g codeclimate-test-reporter
   - npm install
 
 build: off
@@ -23,8 +24,11 @@ test_script:
   - npm test
 
 after_test:
-  - npm install -g codeclimate-test-reporter
+  - git checkout -qf master
   - git status
-  -	'git log -1 --pretty=format:"%H"'
-  -	'git log -1 --pretty=format:"%ct"'
-  - codeclimate < coverage.lcov
+  - ps: 'git log -1 --pretty=format:"%H"'
+  - ps: 'git log -1 --pretty=format:"%ct"'
+  - ps: '$env:JENKINS_URL="true"'
+  - ps: '$env:GIT_BRANCH="master"'
+  - ps: '$env:GIT_COMMIT="${Env:APPVEYOR_REPO_COMMIT}"'
+  - ps: codeclimate < coverage.lcov
