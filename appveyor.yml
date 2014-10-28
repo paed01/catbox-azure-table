@@ -31,4 +31,4 @@ after_test:
   - ps: '$env:JENKINS_URL="true"'
   - ps: '$env:GIT_BRANCH="master"'
   - ps: '$env:GIT_COMMIT="${Env:APPVEYOR_REPO_COMMIT}"'
-  - ps: codeclimate < coverage.lcov
+  - ps: Get-Content coverage.lcov | codeclimate
