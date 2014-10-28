@@ -26,9 +26,4 @@ test_script:
 after_test:
   - git checkout -qf master
   - git status
-  - ps: 'git log -1 --pretty=format:"%H"'
-  - ps: 'git log -1 --pretty=format:"%ct"'
-  - ps: '$env:JENKINS_URL="true"'
-  - ps: '$env:GIT_BRANCH="master"'
-  - ps: '$env:GIT_COMMIT="${Env:APPVEYOR_REPO_COMMIT}"'
-  - ps: Get-Content coverage.lcov | codeclimate
+  - cmd: 'set JENKINS_URL=true & set GIT_BRANCH=master & set GIT_COMMIT=%APPVEYOR_REPO_COMMIT% & codeclimate < coverage.lcov'
