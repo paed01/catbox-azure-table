@@ -23,4 +23,4 @@ test_script:
   - npm test
 
 after_test:
-  - npm script submit-coverage
+  - npm run-script submit-coverage
