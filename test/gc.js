@@ -74,7 +74,7 @@ describe('AzureTable GC', function () {
 	});
 
 	describe('#collect', {
-		timeout : 10000
+		timeout : 0
 	}, function () {
 		var client;
 		var gc;

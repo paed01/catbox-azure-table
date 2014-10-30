@@ -4,13 +4,12 @@
 environment:
   matrix:
     - nodejs_version: 0.10
-  CODECLIMATE_REPO_TOKEN:
-    secure: +dPx4KAE5xmYZBHquqBpuUnc5Rc/GKpydqfpst4eGfAD8MSTW+1Vuru+6QSnZVHMOi1ZlPZ5eK6QIP/7JpIMYr1VB92p/MifAWK0HHQODus=
-  TERM: msys
+  COVERALLS_REPO_TOKEN:
+    secure: mXGYwR3ZrJJAjWBy8v13rFDU/0VR4Kuq/cBp2rOy8TcPwLdFQmF0Dn14rgSjJYhg
+  CI_NAME: appveyor
 
 install:
   - ps: Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version)
-  - npm install -g codeclimate-test-reporter
   - npm install
 
 build: off
@@ -24,6 +23,4 @@ test_script:
   - npm test
 
 after_test:
-  - git checkout -qf master
-  - git status
-  - cmd: 'set JENKINS_URL=true & set GIT_BRANCH=master & set GIT_COMMIT=%APPVEYOR_REPO_COMMIT% & codeclimate < coverage.lcov'
+  - npm script submit-coverage
