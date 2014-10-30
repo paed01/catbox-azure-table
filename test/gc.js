@@ -22,7 +22,7 @@ var options = {
 	ttl_interval : 100000
 };
 
-describe('AzureTable GC', function () {
+describe('AzureTable GC', { timeout : 0 }, function () {
 	var atableClient = new AzureTable(options);
 
 	describe('#ctor', function () {
@@ -73,9 +73,7 @@ describe('AzureTable GC', function () {
 		});
 	});
 
-	describe('#collect', {
-		timeout : 0
-	}, function () {
+	describe('#collect', function () {
 		var client;
 		var gc;
 
