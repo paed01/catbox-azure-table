@@ -21,6 +21,7 @@ test_script:
   - node --version
   - npm --version
   - npm test
+  - npm run-script test-coverage
 
 after_test:
-  - cmd: 'node node_modules/coveralls/bin/coveralls.js -v < coverage.lcov'
+  - cmd: node node_modules/coveralls/bin/coveralls.js -v < coverage.lcov
