@@ -31,7 +31,7 @@
   },
   "scripts": {
     "test": "node node_modules/lab/bin/lab -t 100",
-    "submit-coverage": "node node_modules/coveralls/bin/coveralls.js < node node_modules/lab/bin/lab -r lcov"
+    "test-coverage": "node node_modules/lab/bin/lab -r lcov -o coverage.lcov"
   },
   "licenses": [
     {

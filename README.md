@@ -1,7 +1,7 @@
 catbox-azure-table
 ===========
 
-[![Build status](https://ci.appveyor.com/api/projects/status/anrkvdxmentpi1e5/branch/master)](https://ci.appveyor.com/project/paed01/catbox-azure-table/branch/master) [![Test Coverage](https://codeclimate.com/github/paed01/catbox-azure-table/badges/coverage.svg)](https://codeclimate.com/github/paed01/catbox-azure-table) [![Dependency Status](https://david-dm.org/paed01/catbox-azure-table.png)](https://david-dm.org/paed01/catbox-azure-table)
+[![Build status](https://ci.appveyor.com/api/projects/status/anrkvdxmentpi1e5/branch/master)](https://ci.appveyor.com/project/paed01/catbox-azure-table/branch/master) [![Coverage Status](https://coveralls.io/repos/paed01/catbox-azure-table/badge.png)](https://coveralls.io/r/paed01/catbox-azure-table) [![Dependency Status](https://david-dm.org/paed01/catbox-azure-table.png)](https://david-dm.org/paed01/catbox-azure-table)
 
 Azure Table Storage adapter for [catbox](https://github.com/hapijs/catbox)
 
