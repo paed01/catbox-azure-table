@@ -30,8 +30,7 @@
     "lab": "4.x.x"
   },
   "scripts": {
-    "test": "node node_modules/lab/bin/lab -t 100",
-    "test-coverage": "node node_modules/lab/bin/lab -r lcov -o coverage.lcov"
+    "test": "node node_modules/lab/bin/lab -r lcov -o coverage.lcov",
   },
   "licenses": [
     {
