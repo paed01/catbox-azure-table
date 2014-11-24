@@ -18,6 +18,7 @@ var describe = lab.experiment;
 var it = lab.test;
 
 var options = {
+	connection : process.env.AZURE_TABLE_CONN,
 	partition : 'unittestcachegc',
 	ttl_interval : 100000
 };

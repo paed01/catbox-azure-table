@@ -17,6 +17,7 @@ var describe = lab.experiment;
 var it = lab.test;
 
 var options = {
+	connection : process.env.AZURE_TABLE_CONN,
 	partition : 'unittestcache',
 	ttl_interval : false
 };
@@ -28,7 +29,7 @@ describe('AzureTable', function () {
 				AzureTable();
 			};
 
-			expect(fn).to.throw(Error);
+			expect(fn).to.throw (Error);
 			done();
 		});
 
@@ -37,7 +38,7 @@ describe('AzureTable', function () {
 				var client = new AzureTable();
 			};
 
-			expect(fn).to.throw(Error);
+			expect(fn).to.throw (Error);
 			done();
 		});
 
@@ -48,7 +49,7 @@ describe('AzureTable', function () {
 					});
 			};
 
-			expect(fn).to.throw(Error, /partition/);
+			expect(fn).to.throw (Error, /partition/);
 			done();
 		});
 
@@ -59,7 +60,7 @@ describe('AzureTable', function () {
 					});
 			};
 
-			expect(fn).to.throw(Error, /ttl_interval/);
+			expect(fn).to.throw (Error, /ttl_interval/);
 			done();
 		});
 
@@ -71,7 +72,7 @@ describe('AzureTable', function () {
 					});
 			};
 
-			expect(fn).to.throw(Error, /ttl_interval/);
+			expect(fn).to.throw (Error, /ttl_interval/);
 			done();
 		});
 
@@ -83,7 +84,7 @@ describe('AzureTable', function () {
 					});
 			};
 
-			expect(fn).to.throw(Error, /ttl_interval/);
+			expect(fn).to.throw (Error, /ttl_interval/);
 			done();
 		});
 
@@ -95,7 +96,7 @@ describe('AzureTable', function () {
 					});
 			};
 
-			expect(fn).to.throw(Error, /ttl_interval/);
+			expect(fn).to.throw (Error, /ttl_interval/);
 			done();
 		});
 
@@ -107,7 +108,7 @@ describe('AzureTable', function () {
 					});
 			};
 
-			expect(fn).to.throw(Error, /ttl_interval/);
+			expect(fn).to.throw (Error, /ttl_interval/);
 			done();
 		});
 
@@ -119,7 +120,7 @@ describe('AzureTable', function () {
 					});
 			};
 
-			expect(fn).to.throw(Error, /ttl_interval/);
+			expect(fn).to.throw (Error, /ttl_interval/);
 			done();
 		});
 
@@ -131,7 +132,7 @@ describe('AzureTable', function () {
 					});
 			};
 
-			expect(fn).to.not.throw(Error);
+			expect(fn).to.not.throw (Error);
 			done();
 		});
 	});
@@ -239,6 +240,26 @@ describe('AzureTable', function () {
 				});
 			});
 		});
+
+		it('supports empty id', function (done) {
+			var client = new AzureTable(options);
+			client.start(function (startErr) {
+				expect(startErr).to.not.exist();
+
+				var key = {
+					id : '',
+					segment : 'test'
+				};
+				client.set(key, '123', 1000, function (err) {
+					expect(err).to.not.exist();
+					client.get(key, function (err, result) {
+						expect(err).to.not.exist();
+						expect(result.item).to.equal('123');
+						done();
+					});
+				});
+			});
+		});
 	});
 
 	describe('#start', function () {
@@ -280,7 +301,7 @@ describe('AzureTable', function () {
 				client.start();
 			};
 
-			expect(fn).to.throw(Error);
+			expect(fn).to.throw (Error);
 			done();
 		});
 
@@ -326,7 +347,7 @@ describe('AzureTable', function () {
 				var fn = function () {
 					client.stop();
 				};
-				expect(fn).to.not.throw(Error);
+				expect(fn).to.not.throw (Error);
 				done();
 			});
 
@@ -338,7 +359,7 @@ describe('AzureTable', function () {
 				client.stop();
 			};
 
-			expect(fn).to.not.throw(Error);
+			expect(fn).to.not.throw (Error);
 			done();
 		});
 	});
@@ -473,6 +494,21 @@ describe('AzureTable', function () {
 				segment : 'unittest'
 			}, d, 10000, function (err) {
 				expect(err).to.exist;
+				done();
+			});
+		});
+
+		it('supports empty id', function (done) {
+			var d = {
+				cache : true
+			};
+			var key = {
+				id : '',
+				segment : 'unittest'
+			};
+
+			client.set(key, d, 10000, function (err) {
+				expect(err).to.not.exist;
 				done();
 			});
 		});
@@ -628,6 +664,31 @@ describe('AzureTable', function () {
 					expect(err).to.not.exist;
 
 					expect(data.ttl).to.not.be.a.number;
+
+					done();
+				});
+			});
+		});
+
+		it('supports empty id', function (done) {
+			var d = {
+				empty_id : true
+			};
+			var key = {
+				id : '',
+				segment : 'unittest'
+			};
+
+			client.set(key, d, 10000, function (err) {
+				expect(err).to.not.exist;
+
+				client.get(key, function (err, data) {
+					expect(err).to.not.exist;
+
+					expect(data).to.exist;
+					expect(data.item).to.exist;
+					expect(data.item).to.be.an('object');
+					expect(data.item.empty_id).to.equal(d.empty_id);
 
 					done();
 				});
