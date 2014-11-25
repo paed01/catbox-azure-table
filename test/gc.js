@@ -7,7 +7,7 @@ var Lab = require('lab');
 var AzureTable = require('..');
 var Gc = AzureTable.Gc;
 
-var expect = Lab.expect;
+var expect = require('code').expect;
 
 var lab = exports.lab = Lab.script();
 // var before = Lab.before;
@@ -23,7 +23,9 @@ var options = {
 	ttl_interval : 100000
 };
 
-describe('AzureTable GC', { timeout : 0 }, function () {
+describe('AzureTable GC', {
+	timeout : 0
+}, function () {
 	var atableClient = new AzureTable(options);
 
 	describe('#ctor', function () {
@@ -41,7 +43,7 @@ describe('AzureTable GC', { timeout : 0 }, function () {
 		it('starts timer', function (done) {
 			var gc = new Gc(atableClient.settings);
 			gc.start();
-			expect(gc._interval).to.be.an('object');
+			expect(gc._interval).to.be.an.object();
 			gc.stop();
 			done();
 		});
@@ -50,7 +52,7 @@ describe('AzureTable GC', { timeout : 0 }, function () {
 			var gc = new Gc(atableClient.settings);
 			var timer = gc.start();
 
-			expect(timer).to.not.eql(gc.start());
+			expect(timer).to.not.equal(gc.start());
 
 			gc.stop();
 			done();
@@ -62,14 +64,14 @@ describe('AzureTable GC', { timeout : 0 }, function () {
 			var gc = new Gc(atableClient.settings);
 			gc.start();
 			gc.stop();
-			expect(gc._interval).to.eql(null);
+			expect(gc._interval).to.equal(null);
 			done();
 		});
 
 		it('does nothing if not started', function (done) {
 			var gc = new Gc(atableClient.settings);
 			gc.stop();
-			expect(gc._interval).to.eql(null);
+			expect(gc._interval).to.equal(null);
 			done();
 		});
 	});
@@ -119,7 +121,7 @@ describe('AzureTable GC', { timeout : 0 }, function () {
 						.where('PartitionKey == ?string?', segment);
 
 					gc.client.queryEntities(options.partition, query, null, function (err, result) {
-						expect(err).to.eql(null);
+						expect(err).to.equal(null);
 						expect(result.entries).to.have.length(0);
 						done();
 					});
@@ -164,7 +166,7 @@ describe('AzureTable GC', { timeout : 0 }, function () {
 								.and('gc == ?bool?', false);
 
 							gc.client.queryEntities(options.partition, query, null, function (err, result) {
-								expect(err).to.eql(null);
+								expect(err).to.equal(null);
 								expect(result.entries).to.have.length(1);
 								done();
 							});
@@ -185,7 +187,7 @@ describe('AzureTable GC', { timeout : 0 }, function () {
 		it('returns null in callback if no items where found', function (done) {
 			gc.collect(function () {
 				gc.collect(function (err) {
-					expect(err).to.eql(null);
+					expect(err).to.equal(null);
 					done();
 				});
 			});
@@ -196,7 +198,7 @@ describe('AzureTable GC', { timeout : 0 }, function () {
 				gc.collect();
 			};
 
-			expect(fn).to.not.throw(Error);
+			expect(fn).to.not.throw();
 			done();
 		});
 	});
@@ -210,16 +212,16 @@ describe('AzureTable GC', { timeout : 0 }, function () {
 				var entGen = AzureStorage.TableUtilities.entityGenerator;
 				var entries = [{
 						PartitionKey : entGen.String('segment1'),
-						RowKey : entGen.String('1'),
+						RowKey : entGen.String('1')
 					}, {
 						PartitionKey : entGen.String('segment2'),
-						RowKey : entGen.String('1'),
+						RowKey : entGen.String('1')
 					}
 				];
 
 				gc._createBatches(entries, function (err, batches) {
 					expect(err).to.not.exist;
-					expect(batches).to.be.an('object');
+					expect(batches).to.be.an.object();
 					expect(batches.segment1).to.exist;
 					expect(batches.segment2).to.exist;
 					done();
@@ -233,19 +235,19 @@ describe('AzureTable GC', { timeout : 0 }, function () {
 				for (var i = 0; i < 100; i++) {
 					entries.push({
 						PartitionKey : entGen.String('segment3'),
-						RowKey : entGen.String('entry' + i),
+						RowKey : entGen.String('entry' + i)
 					});
 				}
 
 				gc._createBatches(entries, function (err, batches) {
 					expect(err).to.not.exist;
-					expect(batches).to.be.an('object');
+					expect(batches).to.be.an.object();
 					expect(batches.segment3).to.exist;
 					expect(batches.segment3.operations).to.have.length(100);
-                    
-                    gc.client.executeBatch(options.partition, batches.segment3, function () {
-                        done();
-                    });
+
+					gc.client.executeBatch(options.partition, batches.segment3, function () {
+						done();
+					});
 				});
 			});
 
@@ -257,7 +259,7 @@ describe('AzureTable GC', { timeout : 0 }, function () {
 						PartitionKey : entGen.String('segment1')
 					}, {
 						PartitionKey : entGen.String('segment2'),
-						RowKey : entGen.String('1'),
+						RowKey : entGen.String('1')
 					}
 				];
 
@@ -277,7 +279,7 @@ describe('AzureTable GC', { timeout : 0 }, function () {
 						PartitionKey : entGen.String('segment1')
 					}, {
 						PartitionKey : entGen.String('segment2'),
-						RowKey : entGen.String('1'),
+						RowKey : entGen.String('1')
 					}
 				];
 

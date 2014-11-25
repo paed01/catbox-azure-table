@@ -7,7 +7,7 @@ var async = require('async');
 var Lab = require('lab');
 var AzureTable = require('..');
 
-var expect = Lab.expect;
+var expect = require('code').expect;
 
 var lab = exports.lab = Lab.script();
 var before = lab.before;
@@ -29,7 +29,7 @@ describe('AzureTable', function () {
 				AzureTable();
 			};
 
-			expect(fn).to.throw (Error);
+			expect(fn).to.throw(Error);
 			done();
 		});
 
@@ -38,7 +38,7 @@ describe('AzureTable', function () {
 				var client = new AzureTable();
 			};
 
-			expect(fn).to.throw (Error);
+			expect(fn).to.throw(Error);
 			done();
 		});
 
@@ -49,7 +49,7 @@ describe('AzureTable', function () {
 					});
 			};
 
-			expect(fn).to.throw (Error, /partition/);
+			expect(fn).to.throw(Error, /partition/);
 			done();
 		});
 
@@ -60,7 +60,7 @@ describe('AzureTable', function () {
 					});
 			};
 
-			expect(fn).to.throw (Error, /ttl_interval/);
+			expect(fn).to.throw(Error, /ttl_interval/);
 			done();
 		});
 
@@ -72,7 +72,7 @@ describe('AzureTable', function () {
 					});
 			};
 
-			expect(fn).to.throw (Error, /ttl_interval/);
+			expect(fn).to.throw(Error, /ttl_interval/);
 			done();
 		});
 
@@ -84,7 +84,7 @@ describe('AzureTable', function () {
 					});
 			};
 
-			expect(fn).to.throw (Error, /ttl_interval/);
+			expect(fn).to.throw(Error, /ttl_interval/);
 			done();
 		});
 
@@ -96,7 +96,7 @@ describe('AzureTable', function () {
 					});
 			};
 
-			expect(fn).to.throw (Error, /ttl_interval/);
+			expect(fn).to.throw(Error, /ttl_interval/);
 			done();
 		});
 
@@ -108,7 +108,7 @@ describe('AzureTable', function () {
 					});
 			};
 
-			expect(fn).to.throw (Error, /ttl_interval/);
+			expect(fn).to.throw(Error, /ttl_interval/);
 			done();
 		});
 
@@ -120,7 +120,7 @@ describe('AzureTable', function () {
 					});
 			};
 
-			expect(fn).to.throw (Error, /ttl_interval/);
+			expect(fn).to.throw(Error, /ttl_interval/);
 			done();
 		});
 
@@ -132,7 +132,7 @@ describe('AzureTable', function () {
 					});
 			};
 
-			expect(fn).to.not.throw (Error);
+			expect(fn).to.not.throw();
 			done();
 		});
 	});
@@ -204,8 +204,8 @@ describe('AzureTable', function () {
 					id : 'non-existing',
 					segment : '2'
 				}, function (err, item) {
-					expect(err).to.eql(null);
-					expect(item).to.eql(null);
+					expect(err).to.equal(null);
+					expect(item).to.equal(null);
 					done();
 				});
 			});
@@ -220,7 +220,7 @@ describe('AzureTable', function () {
 					id : 'non-existing',
 					segment : '2'
 				}, function (err) {
-					expect(err).to.eql(null);
+					expect(err).to.equal(null);
 					done();
 				});
 			});
@@ -301,7 +301,7 @@ describe('AzureTable', function () {
 				client.start();
 			};
 
-			expect(fn).to.throw (Error);
+			expect(fn).to.throw(Error);
 			done();
 		});
 
@@ -347,7 +347,7 @@ describe('AzureTable', function () {
 				var fn = function () {
 					client.stop();
 				};
-				expect(fn).to.not.throw (Error);
+				expect(fn).not.to.throw();
 				done();
 			});
 
@@ -359,7 +359,7 @@ describe('AzureTable', function () {
 				client.stop();
 			};
 
-			expect(fn).to.not.throw (Error);
+			expect(fn).to.not.throw();
 			done();
 		});
 	});
@@ -475,7 +475,7 @@ describe('AzureTable', function () {
 
 						expect(data).to.exist;
 						expect(data.item).to.exist;
-						expect(data.item).to.be.an('object');
+						expect(data.item).to.be.an.object();
 						expect(data.item.cache).to.not.exist;
 						expect(data.item.update).to.equal(true);
 
@@ -571,7 +571,7 @@ describe('AzureTable', function () {
 
 					expect(data).to.exist;
 					expect(data.item).to.exist;
-					expect(data.item).to.be.an('object');
+					expect(data.item).to.be.an.object();
 					expect(data.item.cache).to.equal(d.cache);
 					expect(data.item.blue).to.equal(false);
 
@@ -687,7 +687,7 @@ describe('AzureTable', function () {
 
 					expect(data).to.exist;
 					expect(data.item).to.exist;
-					expect(data.item).to.be.an('object');
+					expect(data.item).to.be.an.object();
 					expect(data.item.empty_id).to.equal(d.empty_id);
 
 					done();
