@@ -31,7 +31,7 @@
     "lab": "5.x.x"
   },
   "scripts": {
-    "test": "node node_modules/lab/bin/lab -c"
+    "test": "node node_modules/lab/bin/lab -vc"
   },
   "licenses": [
     {
