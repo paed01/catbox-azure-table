@@ -81,16 +81,10 @@ describe('AzureTable GC', {
 
 	describe('#collect', function () {
 		var client;
-		var gc;
 
 		beforeEach(function (done) {
 			client = new AzureTable(options);
-			client.start(function (err) {
-				expect(err).to.not.exist();
-				gc = client._gcfunc;
-				gc.stop();
-				done();
-			});
+			client.start(done);
 		});
 
 		afterEach(function (done) {
@@ -99,6 +93,7 @@ describe('AzureTable GC', {
 		});
 
 		it('deletes expired items', function (done) {
+			var gc = new Gc(atableClient.settings);
 			var segment = 'ttltest1';
 			var set = function (id, callback) {
 				client.set({
@@ -118,6 +113,9 @@ describe('AzureTable GC', {
 
 				gc.once('batch-result', function (err, result) {
 					expect(err).to.not.exist();
+
+					console.log(result);
+
 					expect(result.length).to.equal(3);
 					done();
 				});
@@ -127,23 +125,11 @@ describe('AzureTable GC', {
 						expect(err).to.not.exist();
 					});
 				}, 100);
-
-				// var query = new AzureStorage.TableQuery()
-				// .top(100).select('PartitionKey', 'RowKey')
-				// .where('PartitionKey == ?string?', segment);
-
-				// setTimeout(function () {
-				// gc.client.queryEntities(options.partition, query, null, function (err, result) {
-				// expect(err).to.equal(null);
-				// expect(result.entries).to.have.length(0);
-				// done();
-				// })
-				// }, 1000);
-				// });
 			});
 		});
 
 		it('ignores items that should not be collected -> gc == false', function (done) {
+			var gc = new Gc(atableClient.settings);
 			var segment = 'ttltest2';
 			var set = function (id, callback) {
 				client.set({
@@ -192,24 +178,13 @@ describe('AzureTable GC', {
 								expect(err).to.not.exist();
 							});
 						}, 100);
-
-						// gc.collect(function (err) {
-						// expect(err).to.not.exist();
-
-						// var query = new AzureStorage.TableQuery()
-						// .top(100).select('PartitionKey', 'RowKey')
-						// .where('PartitionKey == ?string?', segment)
-						// .and('gc == ?bool?', false);
-
-						// setTimeout(function () {
-						// }, 1000);
-						// });
 					});
 				});
 			});
 		});
 
 		it('returns error in callback if partition (table name) is invalid', function (done) {
+			var gc = new Gc(atableClient.settings);
 			gc.tableName = 'cache-me';
 			gc.collect(function (err) {
 				expect(err).to.exist();
@@ -218,6 +193,7 @@ describe('AzureTable GC', {
 		});
 
 		it('returns null in callback if no items where found', function (done) {
+			var gc = new Gc(atableClient.settings);
 			gc.collect(function () {
 				gc.collect(function (err) {
 					expect(err).to.equal(null);
@@ -227,6 +203,7 @@ describe('AzureTable GC', {
 		});
 
 		it('works without callback', function (done) {
+			var gc = new Gc(atableClient.settings);
 			var fn = function () {
 				gc.collect();
 			};
