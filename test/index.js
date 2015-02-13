@@ -1,4 +1,5 @@
 /*jshint expr:true es5:true */
+/*eslint camelcase:0, no-unused-vars:0, handle-callback-err:0 */
 
 var Catbox = require('catbox');
 var AzureStorage = require('azure-storage');
@@ -145,7 +146,7 @@ describe('AzureTable', function () {
 				id : '1',
 				segment : '2'
 			}, function (err) {
-				expect(err).to.exist;
+				expect(err).to.exist();
 				done();
 			});
 		});
@@ -158,7 +159,7 @@ describe('AzureTable', function () {
 			}, {
 				cacheme : true
 			}, Infinity, function (err) {
-				expect(err).to.exist;
+				expect(err).to.exist();
 				done();
 			});
 		});
@@ -166,13 +167,13 @@ describe('AzureTable', function () {
 		it('get with invalid id returns error', function (done) {
 			var client = new AzureTable(options);
 			client.start(function (startErr) {
-				expect(startErr).to.not.exist;
+				expect(startErr).to.not.exist();
 
 				client.get({
 					id : 'two\rlines',
 					segment : '2'
 				}, function (err) {
-					expect(err).to.exist;
+					expect(err).to.exist();
 					done();
 				});
 			});
@@ -181,7 +182,7 @@ describe('AzureTable', function () {
 		it('set with invalid id returns error', function (done) {
 			var client = new AzureTable(options);
 			client.start(function (startErr) {
-				expect(startErr).to.not.exist;
+				expect(startErr).to.not.exist();
 
 				client.set({
 					id : 'two\rlines',
@@ -189,7 +190,7 @@ describe('AzureTable', function () {
 				}, {
 					cacheme : true
 				}, Infinity, function (err) {
-					expect(err).to.exist;
+					expect(err).to.exist();
 					done();
 				});
 			});
@@ -198,7 +199,7 @@ describe('AzureTable', function () {
 		it('get item that do not exist returns null', function (done) {
 			var client = new AzureTable(options);
 			client.start(function (startErr) {
-				expect(startErr).to.not.exist;
+				expect(startErr).to.not.exist();
 
 				client.get({
 					id : 'non-existing',
@@ -214,7 +215,7 @@ describe('AzureTable', function () {
 		it('drop item that do not exist returns null', function (done) {
 			var client = new AzureTable(options);
 			client.start(function (startErr) {
-				expect(startErr).to.not.exist;
+				expect(startErr).to.not.exist();
 
 				client.drop({
 					id : 'non-existing',
@@ -229,13 +230,13 @@ describe('AzureTable', function () {
 		it('drop item with invalid id returns error', function (done) {
 			var client = new AzureTable(options);
 			client.start(function (startErr) {
-				expect(startErr).to.not.exist;
+				expect(startErr).to.not.exist();
 
 				client.drop({
 					id : 'two\rlines',
 					segment : '2'
 				}, function (err) {
-					expect(err).to.exist;
+					expect(err).to.exist();
 					done();
 				});
 			});
@@ -266,7 +267,7 @@ describe('AzureTable', function () {
 		it('returns no error', function (done) {
 			var client = new Catbox.Client(AzureTable, options);
 			client.start(function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 				done();
 			});
 		});
@@ -274,7 +275,7 @@ describe('AzureTable', function () {
 		it('returns no error if called twice', function (done) {
 			var client = new Catbox.Client(AzureTable, options);
 			client.start(function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 				client.start(done);
 			});
 		});
@@ -286,7 +287,7 @@ describe('AzureTable', function () {
 					ttl_interval : false
 				});
 			client.start(function (err) {
-				expect(err).to.exist;
+				expect(err).to.exist();
 				done();
 			});
 		});
@@ -311,10 +312,10 @@ describe('AzureTable', function () {
 					ttl_interval : 100
 				});
 			client.start(function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 
 				client.connection._gcfunc.once('collected', function (err) {
-					expect(err).to.not.exist;
+					expect(err).to.not.exist();
 					done();
 				});
 			});
@@ -326,11 +327,11 @@ describe('AzureTable', function () {
 					ttl_interval : 100
 				});
 			client.start(function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 
 				var i = 0;
 				client.connection._gcfunc.on('collected', function (err) {
-					expect(err).to.not.exist;
+					expect(err).to.not.exist();
 					i++;
 					if (i === 2) {
 						done();
@@ -367,14 +368,14 @@ describe('AzureTable', function () {
 	describe('#isReady', function () {
 		it('returns false if not started', function (done) {
 			var client = new Catbox.Client(AzureTable, options);
-			expect(client.isReady()).to.not.be.ok;
+			expect(client.isReady()).to.not.be.true();
 			done();
 		});
 
 		it('returns true if started', function (done) {
 			var client = new Catbox.Client(AzureTable, options);
 			client.start(function (err) {
-				expect(client.isReady()).to.be.ok;
+				expect(client.isReady()).to.be.true();
 				done();
 			});
 		});
@@ -383,7 +384,7 @@ describe('AzureTable', function () {
 	describe('#validateSegmentName', function () {
 		it('returns null if validated', function (done) {
 			var client = new Catbox.Client(AzureTable, options);
-			expect(client.validateSegmentName('table')).to.be.null;
+			expect(client.validateSegmentName('table')).to.be.null();
 			done();
 		});
 
@@ -417,7 +418,7 @@ describe('AzureTable', function () {
 
 		before(function (done) {
 			client.start(function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 				done();
 			});
 		});
@@ -432,7 +433,7 @@ describe('AzureTable', function () {
 				segment : 'unittest'
 			};
 			rawclient.set(key, d, 10000, function (err) {
-				expect(err).to.exist;
+				expect(err).to.exist();
 				done();
 			});
 		});
@@ -445,7 +446,7 @@ describe('AzureTable', function () {
 				id : 'item 1',
 				segment : 'unittest'
 			}, d, 10000, function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 				done();
 			});
 		});
@@ -460,7 +461,7 @@ describe('AzureTable', function () {
 			};
 
 			client.set(key, d, 10000, function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 
 				var d2 = {
 					update : true
@@ -471,12 +472,12 @@ describe('AzureTable', function () {
 							console.log(err.stack);
 						}
 
-						expect(err).to.not.exist;
+						expect(err).to.not.exist();
 
-						expect(data).to.exist;
-						expect(data.item).to.exist;
+						expect(data).to.exist();
+						expect(data.item).to.exist();
 						expect(data.item).to.be.an.object();
-						expect(data.item.cache).to.not.exist;
+						expect(data.item.cache).to.not.exist();
 						expect(data.item.update).to.equal(true);
 
 						done();
@@ -493,7 +494,7 @@ describe('AzureTable', function () {
 				id : 'item 1',
 				segment : 'unittest'
 			}, d, 10000, function (err) {
-				expect(err).to.exist;
+				expect(err).to.exist();
 				done();
 			});
 		});
@@ -508,7 +509,7 @@ describe('AzureTable', function () {
 			};
 
 			client.set(key, d, 10000, function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 				done();
 			});
 		});
@@ -518,7 +519,7 @@ describe('AzureTable', function () {
 		var client = new Catbox.Client(AzureTable, options);
 		before(function (done) {
 			client.start(function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 				done();
 			});
 		});
@@ -530,7 +531,7 @@ describe('AzureTable', function () {
 				segment : 'unittest'
 			};
 			rawclient.get(key, function (err) {
-				expect(err).to.exist;
+				expect(err).to.exist();
 				done();
 			});
 		});
@@ -544,11 +545,11 @@ describe('AzureTable', function () {
 				cache : true
 			};
 			client.set(key, d, 10000, function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 
 				client.get(key, function (err, item) {
-					expect(err).to.not.exist;
-					expect(item).to.exist;
+					expect(err).to.not.exist();
+					expect(item).to.exist();
 					done();
 				});
 			});
@@ -564,13 +565,13 @@ describe('AzureTable', function () {
 				blue : false
 			};
 			client.set(key, d, 10000, function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 
 				client.get(key, function (err, data) {
-					expect(err).to.not.exist;
+					expect(err).to.not.exist();
 
-					expect(data).to.exist;
-					expect(data.item).to.exist;
+					expect(data).to.exist();
+					expect(data.item).to.exist();
 					expect(data.item).to.be.an.object();
 					expect(data.item.cache).to.equal(d.cache);
 					expect(data.item.blue).to.equal(false);
@@ -586,8 +587,8 @@ describe('AzureTable', function () {
 				segment : 'unittest'
 			};
 			client.get(key, function (err, data) {
-				expect(err).to.not.exist;
-				expect(data).to.not.exist;
+				expect(err).to.not.exist();
+				expect(data).to.not.exist();
 				done();
 			});
 		});
@@ -598,8 +599,8 @@ describe('AzureTable', function () {
 				segment : 'unittest-non-existing'
 			};
 			client.get(key, function (err, data) {
-				expect(err).to.not.exist;
-				expect(data).to.not.exist;
+				expect(err).to.not.exist();
+				expect(data).to.not.exist();
 				done();
 			});
 		});
@@ -618,10 +619,10 @@ describe('AzureTable', function () {
 			};
 
 			client.connection.client.insertOrMergeEntity(client.connection.tableName, insertData, function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 
 				client.get(key, function (err, data) {
-					expect(err).to.exist;
+					expect(err).to.exist();
 					expect(err.message).to.equal('Bad value content');
 					done();
 				});
@@ -637,10 +638,10 @@ describe('AzureTable', function () {
 				cache : true
 			};
 			client.set(key, d, 10000, function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 
 				client.get(key, function (err, data) {
-					expect(err).to.not.exist;
+					expect(err).to.not.exist();
 
 					expect(data.stored).to.not.be.instanceOf(Date);
 
@@ -658,12 +659,12 @@ describe('AzureTable', function () {
 				cache : true
 			};
 			client.set(key, d, 10000, function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 
 				client.get(key, function (err, data) {
-					expect(err).to.not.exist;
+					expect(err).to.not.exist();
 
-					expect(data.ttl).to.not.be.a.number;
+					expect(data.ttl).to.be.a.number();
 
 					done();
 				});
@@ -680,13 +681,13 @@ describe('AzureTable', function () {
 			};
 
 			client.set(key, d, 10000, function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 
 				client.get(key, function (err, data) {
-					expect(err).to.not.exist;
+					expect(err).to.not.exist();
 
-					expect(data).to.exist;
-					expect(data.item).to.exist;
+					expect(data).to.exist();
+					expect(data.item).to.exist();
 					expect(data.item).to.be.an.object();
 					expect(data.item.empty_id).to.equal(d.empty_id);
 
@@ -700,7 +701,7 @@ describe('AzureTable', function () {
 		var client = new Catbox.Client(AzureTable, options);
 		before(function (done) {
 			client.start(function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 				done();
 			});
 		});
@@ -712,7 +713,7 @@ describe('AzureTable', function () {
 				segment : 'unittest'
 			};
 			rawclient.drop(key, function (err) {
-				expect(err).to.exist;
+				expect(err).to.exist();
 				done();
 			});
 		});
@@ -726,13 +727,13 @@ describe('AzureTable', function () {
 				cache : true
 			};
 			client.set(key, d, 10000, function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 
 				client.drop(key, function (err) {
-					expect(err).to.not.exist;
+					expect(err).to.not.exist();
 					client.get(key, function (err, data) {
-						expect(err).to.not.exist;
-						expect(data).to.not.exist;
+						expect(err).to.not.exist();
+						expect(data).to.not.exist();
 						done();
 					});
 				});
@@ -745,7 +746,7 @@ describe('AzureTable', function () {
 				segment : 'unittest'
 			};
 			client.drop(key, function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 				done();
 			});
 		});
@@ -756,7 +757,7 @@ describe('AzureTable', function () {
 				segment : 'unittest-non-existing'
 			};
 			client.get(key, function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 				done();
 			});
 		});
@@ -767,7 +768,7 @@ describe('AzureTable', function () {
 		var client = new AzureTable(options);
 		client.start(function () {
 			client.client.deleteTableIfExists(options.partition, function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 				done();
 			});
 		});
