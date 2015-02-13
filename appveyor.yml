@@ -16,6 +16,7 @@ build: off
 
 before_test:
   - ps: '& "${Env:ProgramFiles(x86)}\Microsoft SDKs\Azure\Storage Emulator\WAStorageEmulator.exe" start'
+  - ps: '& "${Env:ProgramFiles(x86)}\Microsoft SDKs\Azure\Storage Emulator\WAStorageEmulator.exe" clear table'
 
 test_script:
   - node --version
