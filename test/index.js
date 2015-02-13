@@ -363,7 +363,21 @@ describe('AzureTable', function () {
 			expect(fn).to.not.throw();
 			done();
 		});
-	});
+
+		it('stops Gc as well', function (done) {
+			var client = new Catbox.Client(AzureTable, {
+					partition : options.partition,
+					ttl_interval : 100
+				});
+			client.start(function (err) {
+                expect(client.connection._gcfunc._timer).to.not.equal(null);
+
+                client.stop();
+                expect(client.connection._gcfunc._timer).to.equal(null);
+                done();
+            });
+        });
+    });
 
 	describe('#isReady', function () {
 		it('returns false if not started', function (done) {

@@ -2,6 +2,7 @@
 /*eslint camelcase:0, no-unused-vars:0, handle-callback-err:0 */
 var AzureStorage = require('azure-storage');
 var async = require('async');
+var Hoek = require('hoek');
 var util = require('util');
 
 var Lab = require('lab');
@@ -11,7 +12,7 @@ var Gc = AzureTable.Gc;
 var expect = require('code').expect;
 
 var lab = exports.lab = Lab.script();
-// var before = Lab.before;
+var before = lab.before;
 var beforeEach = lab.beforeEach;
 var after = lab.after;
 var afterEach = lab.afterEach;
@@ -21,13 +22,19 @@ var it = lab.test;
 var options = {
 	connection : process.env.AZURE_TABLE_CONN,
 	partition : 'unittestcachegc',
-	ttl_interval : 100000
+	ttl_interval : 0
 };
 
 describe('AzureTable GC', {
 	timeout : 10000
 }, function () {
 	var atableClient = new AzureTable(options);
+	var settings = Hoek.clone(atableClient.settings);
+	settings.ttl_interval = 5000;
+
+	before(function (done) {
+		atableClient.start(done);
+	});
 
 	describe('#ctor', function () {
 		it('throws an error if not created with new', function (done) {
@@ -42,7 +49,7 @@ describe('AzureTable GC', {
 
 	describe('#start', function () {
 		it('starts timer', function (done) {
-			var gc = new Gc(atableClient.settings);
+			var gc = new Gc(settings);
 			gc.start(function (err, timer) {
 				expect(timer).to.be.an.object();
 				gc.stop();
@@ -51,7 +58,7 @@ describe('AzureTable GC', {
 		});
 
 		it('restarts timer if already started', function (done) {
-			var gc = new Gc(atableClient.settings);
+			var gc = new Gc(settings);
 			gc.start(function (err, timer1) {
 				gc.start(function (err, timer2) {
 					expect(timer1).to.not.equal(timer2);
@@ -64,7 +71,7 @@ describe('AzureTable GC', {
 
 	describe('#stop', function () {
 		it('stops timer', function (done) {
-			var gc = new Gc(atableClient.settings);
+			var gc = new Gc(settings);
 			gc.start();
 			gc.stop();
 			expect(gc._timer).to.equal(null);
@@ -72,7 +79,7 @@ describe('AzureTable GC', {
 		});
 
 		it('does nothing if not started', function (done) {
-			var gc = new Gc(atableClient.settings);
+			var gc = new Gc(settings);
 			gc.stop();
 			expect(gc._timer).to.equal(null);
 			done();
@@ -80,23 +87,11 @@ describe('AzureTable GC', {
 	});
 
 	describe('#collect', function () {
-		var client;
-
-		beforeEach(function (done) {
-			client = new AzureTable(options);
-			client.start(done);
-		});
-
-		afterEach(function (done) {
-			client.stop();
-			done();
-		});
-
 		it('deletes expired items', function (done) {
-			var gc = new Gc(atableClient.settings);
+			var gcExp = new Gc(settings);
 			var segment = 'ttltest1';
 			var set = function (id, callback) {
-				client.set({
+				atableClient.set({
 					id : id,
 					segment : segment
 				}, {
@@ -111,28 +106,32 @@ describe('AzureTable GC', {
 			}, function (err) {
 				expect(err).to.not.exist();
 
-				gc.once('batch-result', function (err, result) {
+				console.log('listening on event');
+				gcExp.once('collected', function (err) {
 					expect(err).to.not.exist();
 
-					console.log(result);
-
-					expect(result.length).to.equal(3);
-					done();
+					atableClient.get({
+						id : '3',
+						segment : segment
+					}, function (err, item) {
+						expect(item).to.not.exist();
+						done();
+					});
 				});
 
 				setTimeout(function () {
-					gc.collect(function (err) {
+					gcExp.collect(function (err) {
 						expect(err).to.not.exist();
 					});
-				}, 100);
+				}, 200);
 			});
 		});
 
 		it('ignores items that should not be collected -> gc == false', function (done) {
-			var gc = new Gc(atableClient.settings);
+			var gc = new Gc(settings);
 			var segment = 'ttltest2';
 			var set = function (id, callback) {
-				client.set({
+				atableClient.set({
 					id : id,
 					segment : segment
 				}, {
@@ -147,19 +146,18 @@ describe('AzureTable GC', {
 			}, function (err) {
 				expect(err).to.not.exist();
 
-				client.generateRow({
+				atableClient.generateRow({
 					id : '6',
 					segment : segment
 				}, {
 					cacheforever : true
 				}, 50, false, function (err, insertData) {
 
-					client.client.insertOrMergeEntity(client.tableName, insertData, null, function (err) {
+					atableClient.client.insertOrMergeEntity(atableClient.tableName, insertData, null, function (err) {
 						expect(err).to.not.exist();
 
-						gc.once('batch-result', function (err, result) {
+						gc.once('collected', function (err) {
 							expect(err).to.not.exist();
-							expect(result.length).to.equal(2);
 
 							var query = new AzureStorage.TableQuery()
 								.top(100).select('PartitionKey', 'RowKey')
@@ -177,14 +175,14 @@ describe('AzureTable GC', {
 							gc.collect(function (err) {
 								expect(err).to.not.exist();
 							});
-						}, 100);
+						}, 200);
 					});
 				});
 			});
 		});
 
 		it('returns error in callback if partition (table name) is invalid', function (done) {
-			var gc = new Gc(atableClient.settings);
+			var gc = new Gc(settings);
 			gc.tableName = 'cache-me';
 			gc.collect(function (err) {
 				expect(err).to.exist();
@@ -193,7 +191,7 @@ describe('AzureTable GC', {
 		});
 
 		it('returns null in callback if no items where found', function (done) {
-			var gc = new Gc(atableClient.settings);
+			var gc = new Gc(settings);
 			gc.collect(function () {
 				gc.collect(function (err) {
 					expect(err).to.equal(null);
@@ -203,7 +201,7 @@ describe('AzureTable GC', {
 		});
 
 		it('works without callback', function (done) {
-			var gc = new Gc(atableClient.settings);
+			var gc = new Gc(settings);
 			var fn = function () {
 				gc.collect();
 			};
@@ -217,7 +215,7 @@ describe('AzureTable GC', {
 
 		describe('#_createBatches', function () {
 			it('creates batches per PartitionKey', function (done) {
-				var gc = new Gc(atableClient.settings);
+				var gc = new Gc(settings);
 
 				var entGen = AzureStorage.TableUtilities.entityGenerator;
 				var entries = [{
@@ -239,7 +237,7 @@ describe('AzureTable GC', {
 			});
 
 			it('can creates batches of size 100', function (done) {
-				var gc = new Gc(atableClient.settings);
+				var gc = new Gc(settings);
 				var entGen = AzureStorage.TableUtilities.entityGenerator;
 				var entries = [];
 				for (var i = 0; i < 100; i++) {
@@ -262,7 +260,7 @@ describe('AzureTable GC', {
 			});
 
 			it('returns error in callback if batch insert failed', function (done) {
-				var gc = new Gc(atableClient.settings);
+				var gc = new Gc(settings);
 
 				var entGen = AzureStorage.TableUtilities.entityGenerator;
 				var entries = [{
@@ -281,9 +279,39 @@ describe('AzureTable GC', {
 		});
 
 		describe('#_delete', function () {
-			it('returns error in callback if batch insert failed', function (done) {
-				var gc = new Gc(atableClient.settings);
+			var gc = new Gc(settings);
+			it('deletes item', function (done) {
+				var key = {
+					id : 'delete-test-1',
+					segment : '_delete'
+				};
 
+				atableClient.set(key, {
+					cacheme : true
+				}, 50, function (err) {
+					expect(err).to.not.exist();
+					var entGen = AzureStorage.TableUtilities.entityGenerator;
+					var entries = [{
+							PartitionKey : entGen.String(key.id),
+							RowKey : entGen.String(key.segment)
+						}
+					];
+					gc._delete(entries, function (err, res) {
+						expect(err).to.not.exist();
+						console.log(res);
+
+                        setTimeout(function() {
+                            atableClient.get(key, function (err, item) {
+                                expect(err).to.not.exist();
+                                expect(item).to.not.exist();
+                                done();
+                            });
+                        }, 200);
+					});
+				});
+			});
+
+			it('returns error in callback if batch insert failed', function (done) {
 				var entGen = AzureStorage.TableUtilities.entityGenerator;
 				var entries = [{
 						PartitionKey : entGen.String('segment1')
