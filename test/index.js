@@ -11,11 +11,6 @@ var AzureTable = require('..');
 var expect = require('code').expect;
 
 var lab = exports.lab = Lab.script();
-var before = lab.before;
-// var beforeEach = Lab.beforeEach;
-var after = lab.after;
-var describe = lab.experiment;
-var it = lab.test;
 
 var options = {
 	connection : process.env.AZURE_TABLE_CONN,
@@ -23,9 +18,9 @@ var options = {
 	ttl_interval : false
 };
 
-describe('AzureTable', function () {
-	describe('#ctor', function () {
-		it('throws an error if not created with new', function (done) {
+lab.experiment('AzureTable', function () {
+	lab.experiment('#ctor', function () {
+		lab.test('throws an error if not created with new', function (done) {
 			var fn = function () {
 				AzureTable();
 			};
@@ -34,7 +29,7 @@ describe('AzureTable', function () {
 			done();
 		});
 
-		it('instantiate without configuration throws error', function (done) {
+		lab.test('instantiate without configuration throws error', function (done) {
 			var fn = function () {
 				var client = new AzureTable();
 			};
@@ -43,7 +38,7 @@ describe('AzureTable', function () {
 			done();
 		});
 
-		it('instantiate without partition throws an error', function (done) {
+		lab.test('instantiate without partition throws an error', function (done) {
 			var fn = function () {
 				var client = new AzureTable({
 						ttl_interval : false
@@ -54,7 +49,7 @@ describe('AzureTable', function () {
 			done();
 		});
 
-		it('instantiate without ttl_interval throws an error', function (done) {
+		lab.test('instantiate without ttl_interval throws an error', function (done) {
 			var fn = function () {
 				var client = new AzureTable({
 						partition : 'catbox'
@@ -65,7 +60,7 @@ describe('AzureTable', function () {
 			done();
 		});
 
-		it('instantiate with ttl_interval = true throws an error', function (done) {
+		lab.test('instantiate with ttl_interval = true throws an error', function (done) {
 			var fn = function () {
 				var client = new AzureTable({
 						partition : 'catbox',
@@ -77,7 +72,7 @@ describe('AzureTable', function () {
 			done();
 		});
 
-		it('instantiate with ttl_interval as string throws an error', function (done) {
+		lab.test('instantiate with ttl_interval as string throws an error', function (done) {
 			var fn = function () {
 				var client = new AzureTable({
 						partition : 'catbox',
@@ -89,7 +84,7 @@ describe('AzureTable', function () {
 			done();
 		});
 
-		it('instantiate with ttl_interval as an object throws an error', function (done) {
+		lab.test('instantiate with ttl_interval as an object throws an error', function (done) {
 			var fn = function () {
 				var client = new AzureTable({
 						partition : 'catbox',
@@ -101,7 +96,7 @@ describe('AzureTable', function () {
 			done();
 		});
 
-		it('instantiate with ttl_interval as a function throws an error', function (done) {
+		lab.test('instantiate with ttl_interval as a function throws an error', function (done) {
 			var fn = function () {
 				var client = new AzureTable({
 						partition : 'catbox',
@@ -113,7 +108,7 @@ describe('AzureTable', function () {
 			done();
 		});
 
-		it('instantiate with ttl_interval as null throws an error', function (done) {
+		lab.test('instantiate with ttl_interval as null throws an error', function (done) {
 			var fn = function () {
 				var client = new AzureTable({
 						partition : 'catbox',
@@ -125,7 +120,7 @@ describe('AzureTable', function () {
 			done();
 		});
 
-		it('instantiate with ttl_interval as number throws no error', function (done) {
+		lab.test('instantiate with ttl_interval as number throws no error', function (done) {
 			var fn = function () {
 				var client = new AzureTable({
 						partition : 'catbox',
@@ -138,9 +133,9 @@ describe('AzureTable', function () {
 		});
 	});
 
-	describe('interface', function () {
+	lab.experiment('interface', function () {
 
-		it('get without starting returns error', function (done) {
+		lab.test('get without starting returns error', function (done) {
 			var client = new AzureTable(options);
 			client.get({
 				id : '1',
@@ -151,7 +146,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('set without starting returns error', function (done) {
+		lab.test('set without starting returns error', function (done) {
 			var client = new AzureTable(options);
 			client.set({
 				id : '1',
@@ -164,7 +159,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('get with invalid id returns error', function (done) {
+		lab.test('get with invalid id returns error', function (done) {
 			var client = new AzureTable(options);
 			client.start(function (startErr) {
 				expect(startErr).to.not.exist();
@@ -179,7 +174,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('set with invalid id returns error', function (done) {
+		lab.test('set with invalid id returns error', function (done) {
 			var client = new AzureTable(options);
 			client.start(function (startErr) {
 				expect(startErr).to.not.exist();
@@ -196,7 +191,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('get item that do not exist returns null', function (done) {
+		lab.test('get item that do not exist returns null', function (done) {
 			var client = new AzureTable(options);
 			client.start(function (startErr) {
 				expect(startErr).to.not.exist();
@@ -212,7 +207,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('drop item that do not exist returns null', function (done) {
+		lab.test('drop item that do not exist returns null', function (done) {
 			var client = new AzureTable(options);
 			client.start(function (startErr) {
 				expect(startErr).to.not.exist();
@@ -227,7 +222,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('drop item with invalid id returns error', function (done) {
+		lab.test('drop item with invalid id returns error', function (done) {
 			var client = new AzureTable(options);
 			client.start(function (startErr) {
 				expect(startErr).to.not.exist();
@@ -242,7 +237,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('supports empty id', function (done) {
+		lab.test('supports empty id', function (done) {
 			var client = new AzureTable(options);
 			client.start(function (startErr) {
 				expect(startErr).to.not.exist();
@@ -263,8 +258,8 @@ describe('AzureTable', function () {
 		});
 	});
 
-	describe('#start', function () {
-		it('returns no error', function (done) {
+	lab.experiment('#start', function () {
+		lab.test('returns no error', function (done) {
 			var client = new Catbox.Client(AzureTable, options);
 			client.start(function (err) {
 				expect(err).to.not.exist();
@@ -272,7 +267,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('returns no error if called twice', function (done) {
+		lab.test('returns no error if called twice', function (done) {
 			var client = new Catbox.Client(AzureTable, options);
 			client.start(function (err) {
 				expect(err).to.not.exist();
@@ -280,7 +275,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('returns error if partition (tableName) does not match naming convention', function (done) {
+		lab.test('returns error if partition (tableName) does not match naming convention', function (done) {
 			var client = new Catbox.Client(AzureTable, {
 					connection : options.connection,
 					partition : 'cache-me',
@@ -292,7 +287,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('throws error if connection string is wrongly formatted', function (done) {
+		lab.test('throws error if connection string is wrongly formatted', function (done) {
 			var client = new Catbox.Client(AzureTable, {
 					connection : 'somewhere',
 					partition : options.partition,
@@ -306,7 +301,7 @@ describe('AzureTable', function () {
 			done();
 		});
 
-		it('emits collected event when Gc has collected', function (done) {
+		lab.test('emits collected event when Gc has collected', function (done) {
 			var client = new Catbox.Client(AzureTable, {
 					partition : options.partition,
 					ttl_interval : 100
@@ -321,7 +316,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('emits collected event at least 2 times', function (done) {
+		lab.test('emits collected event at least 2 times', function (done) {
 			var client = new Catbox.Client(AzureTable, {
 					partition : options.partition,
 					ttl_interval : 100
@@ -329,20 +324,17 @@ describe('AzureTable', function () {
 			client.start(function (err) {
 				expect(err).to.not.exist();
 
-				var i = 0;
-				client.connection._gcfunc.on('collected', function (err) {
-					expect(err).to.not.exist();
-					i++;
-					if (i === 2) {
-						done();
-					}
+				client.connection._gcfunc.once('collected', function (err) {
+                    client.connection._gcfunc.once('collected', function (err) {
+                        done();
+                    });
 				});
 			});
 		});
 	});
 
-	describe('#stop', function () {
-		it('returns no error', function (done) {
+	lab.experiment('#stop', function () {
+		lab.test('returns no error', function (done) {
 			var client = new Catbox.Client(AzureTable, options);
 			client.start(function (err) {
 				var fn = function () {
@@ -354,7 +346,7 @@ describe('AzureTable', function () {
 
 		});
 
-		it('returns no error when client isn\'t started', function (done) {
+		lab.test('returns no error when client isn\'t started', function (done) {
 			var client = new Catbox.Client(AzureTable, options);
 			var fn = function () {
 				client.stop();
@@ -364,7 +356,7 @@ describe('AzureTable', function () {
 			done();
 		});
 
-		it('stops Gc as well', function (done) {
+		lab.test('stops Gc as well', function (done) {
 			var client = new Catbox.Client(AzureTable, {
 					partition : options.partition,
 					ttl_interval : 100
@@ -379,14 +371,14 @@ describe('AzureTable', function () {
         });
     });
 
-	describe('#isReady', function () {
-		it('returns false if not started', function (done) {
+	lab.experiment('#isReady', function () {
+		lab.test('returns false if not started', function (done) {
 			var client = new Catbox.Client(AzureTable, options);
 			expect(client.isReady()).to.not.be.true();
 			done();
 		});
 
-		it('returns true if started', function (done) {
+		lab.test('returns true if started', function (done) {
 			var client = new Catbox.Client(AzureTable, options);
 			client.start(function (err) {
 				expect(client.isReady()).to.be.true();
@@ -395,49 +387,49 @@ describe('AzureTable', function () {
 		});
 	});
 
-	describe('#validateSegmentName', function () {
-		it('returns null if validated', function (done) {
+	lab.experiment('#validateSegmentName', function () {
+		lab.test('returns null if validated', function (done) {
 			var client = new Catbox.Client(AzureTable, options);
 			expect(client.validateSegmentName('table')).to.be.null();
 			done();
 		});
 
-		it('returns Error if empty string', function (done) {
+		lab.test('returns Error if empty string', function (done) {
 			var client = new Catbox.Client(AzureTable, options);
 			expect(client.validateSegmentName('')).to.be.instanceOf(Error);
 			done();
 		});
 
-		it('returns Error if nothing passed', function (done) {
+		lab.test('returns Error if nothing passed', function (done) {
 			var client = new Catbox.Client(AzureTable, options);
 			expect(client.validateSegmentName()).to.be.instanceOf(Error);
 			done();
 		});
 
-		it('returns Error if null', function (done) {
+		lab.test('returns Error if null', function (done) {
 			var client = new Catbox.Client(AzureTable, options);
 			expect(client.validateSegmentName(null)).to.be.instanceOf(Error);
 			done();
 		});
 
-		it('returns Error if \\0', function (done) {
+		lab.test('returns Error if \\0', function (done) {
 			var client = new Catbox.Client(AzureTable, options);
 			expect(client.validateSegmentName('\0')).to.be.instanceOf(Error);
 			done();
 		});
 	});
 
-	describe('#set', function () {
+	lab.experiment('#set', function () {
 		var client = new Catbox.Client(AzureTable, options);
 
-		before(function (done) {
+		lab.before(function (done) {
 			client.start(function (err) {
 				expect(err).to.not.exist();
 				done();
 			});
 		});
 
-		it('without started client returns error in callback', function (done) {
+		lab.test('without started client returns error in callback', function (done) {
 			var rawclient = new AzureTable(options);
 			var d = {
 				cache : true
@@ -452,7 +444,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('puts object in cache', function (done) {
+		lab.test('puts object in cache', function (done) {
 			var d = {
 				cache : true
 			};
@@ -465,7 +457,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('replaces object in cache', function (done) {
+		lab.test('replaces object in cache', function (done) {
 			var d = {
 				cache : true
 			};
@@ -501,7 +493,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('returns error in callback if circular json', function (done) {
+		lab.test('returns error in callback if circular json', function (done) {
 			var d = {};
 			d.circular = d;
 			client.set({
@@ -513,7 +505,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('supports empty id', function (done) {
+		lab.test('supports empty id', function (done) {
 			var d = {
 				cache : true
 			};
@@ -529,16 +521,16 @@ describe('AzureTable', function () {
 		});
 	});
 
-	describe('#get', function () {
+	lab.experiment('#get', function () {
 		var client = new Catbox.Client(AzureTable, options);
-		before(function (done) {
+		lab.before(function (done) {
 			client.start(function (err) {
 				expect(err).to.not.exist();
 				done();
 			});
 		});
 
-		it('without started client returns error in callback', function (done) {
+		lab.test('without started client returns error in callback', function (done) {
 			var rawclient = new AzureTable(options);
 			var key = {
 				id : 'item 2',
@@ -550,7 +542,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('fetches object from cache', function (done) {
+		lab.test('fetches object from cache', function (done) {
 			var key = {
 				id : 'item 2',
 				segment : 'unittest'
@@ -569,7 +561,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('fetches object with same data', function (done) {
+		lab.test('fetches object with same data', function (done) {
 			var key = {
 				id : 'item 3',
 				segment : 'unittest'
@@ -595,7 +587,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('with non-existing key id returns nothing', function (done) {
+		lab.test('with non-existing key id returns nothing', function (done) {
 			var key = {
 				id : 'no-item 1',
 				segment : 'unittest'
@@ -607,7 +599,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('with non-existing key segment returns nothing', function (done) {
+		lab.test('with non-existing key segment returns nothing', function (done) {
 			var key = {
 				id : 'no-item 1',
 				segment : 'unittest-non-existing'
@@ -619,7 +611,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('with non-json data in table returns error in callback', function (done) {
+		lab.test('with non-json data in table returns error in callback', function (done) {
 			var key = {
 				id : 'Wrongly formatted 1',
 				segment : 'unittest'
@@ -643,7 +635,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('returns stored as timestamp', function (done) {
+		lab.test('returns stored as timestamp', function (done) {
 			var key = {
 				id : 'item 2 with ts',
 				segment : 'unittest'
@@ -664,7 +656,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('returns ttl as number', function (done) {
+		lab.test('returns ttl as number', function (done) {
 			var key = {
 				id : 'item 2 with ts',
 				segment : 'unittest'
@@ -685,7 +677,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('supports empty id', function (done) {
+		lab.test('supports empty id', function (done) {
 			var d = {
 				empty_id : true
 			};
@@ -711,16 +703,16 @@ describe('AzureTable', function () {
 		});
 	});
 
-	describe('#drop', function () {
+	lab.experiment('#drop', function () {
 		var client = new Catbox.Client(AzureTable, options);
-		before(function (done) {
+		lab.before(function (done) {
 			client.start(function (err) {
 				expect(err).to.not.exist();
 				done();
 			});
 		});
 
-		it('without started client returns error in callback', function (done) {
+		lab.test('without started client returns error in callback', function (done) {
 			var rawclient = new AzureTable(options);
 			var key = {
 				id : 'item 4',
@@ -732,7 +724,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('drops object from cache', function (done) {
+		lab.test('drops object from cache', function (done) {
 			var key = {
 				id : 'item 4',
 				segment : 'unittest'
@@ -754,7 +746,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('with non-existing key id returns nothing', function (done) {
+		lab.test('with non-existing key id returns nothing', function (done) {
 			var key = {
 				id : 'no-item 2',
 				segment : 'unittest'
@@ -765,7 +757,7 @@ describe('AzureTable', function () {
 			});
 		});
 
-		it('with non-existing segment returns nothing', function (done) {
+		lab.test('with non-existing segment returns nothing', function (done) {
 			var key = {
 				id : 'no-item 2',
 				segment : 'unittest-non-existing'
@@ -778,7 +770,7 @@ describe('AzureTable', function () {
 
 	});
 
-	after(function (done) {
+	lab.after(function (done) {
 		var client = new AzureTable(options);
 		client.start(function () {
 			client.client.deleteTableIfExists(options.partition, function (err) {
