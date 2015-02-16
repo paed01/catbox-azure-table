@@ -1,7 +1,9 @@
-/*jshint expr:true es5:true */
-
+/*jshint expr:true, es5:true, camelcase:false */
+/*eslint camelcase:0, no-unused-vars:0, handle-callback-err:0 */
 var AzureStorage = require('azure-storage');
 var async = require('async');
+var Hoek = require('hoek');
+var util = require('util');
 
 var Lab = require('lab');
 var AzureTable = require('..');
@@ -10,26 +12,24 @@ var Gc = AzureTable.Gc;
 var expect = require('code').expect;
 
 var lab = exports.lab = Lab.script();
-// var before = Lab.before;
-var beforeEach = lab.beforeEach;
-var after = lab.after;
-var afterEach = lab.afterEach;
-var describe = lab.experiment;
-var it = lab.test;
 
 var options = {
 	connection : process.env.AZURE_TABLE_CONN,
 	partition : 'unittestcachegc',
-	ttl_interval : 100000
+	ttl_interval : 0
 };
 
-describe('AzureTable GC', {
-	timeout : 0
-}, function () {
+lab.experiment('AzureTable GC', function () {
 	var atableClient = new AzureTable(options);
+	var settings = Hoek.clone(atableClient.settings);
+	settings.ttl_interval = 5000;
 
-	describe('#ctor', function () {
-		it('throws an error if not created with new', function (done) {
+	lab.before(function (done) {
+		atableClient.start(done);
+	});
+
+	lab.experiment('#ctor', function () {
+		lab.test('throws an error if not created with new', function (done) {
 			var fn = function () {
 				Gc();
 			};
@@ -39,66 +39,51 @@ describe('AzureTable GC', {
 		});
 	});
 
-	describe('#start', function () {
-		it('starts timer', function (done) {
-			var gc = new Gc(atableClient.settings);
-			gc.start();
-			expect(gc._interval).to.be.an.object();
-			gc.stop();
-			done();
-		});
-
-		it('restarts timer if already started', function (done) {
-			var gc = new Gc(atableClient.settings);
-			var timer = gc.start();
-
-			expect(timer).to.not.equal(gc.start());
-
-			gc.stop();
-			done();
-		});
-	});
-
-	describe('#stop', function () {
-		it('stops timer', function (done) {
-			var gc = new Gc(atableClient.settings);
-			gc.start();
-			gc.stop();
-			expect(gc._interval).to.equal(null);
-			done();
-		});
-
-		it('does nothing if not started', function (done) {
-			var gc = new Gc(atableClient.settings);
-			gc.stop();
-			expect(gc._interval).to.equal(null);
-			done();
-		});
-	});
-
-	describe('#collect', function () {
-		var client;
-		var gc;
-
-		beforeEach(function (done) {
-			client = new AzureTable(options);
-			client.start(function (err) {
-				expect(err).to.not.exist;
-				gc = client._gcfunc;
+	lab.experiment('#start', function () {
+		lab.test('starts timer', function (done) {
+			var gc = new Gc(settings);
+			gc.start(function (err, timer) {
+				expect(timer).to.be.an.object();
 				gc.stop();
 				done();
 			});
 		});
 
-		afterEach(function (done) {
-			client.stop();
+		lab.test('restarts timer if already started', function (done) {
+			var gc = new Gc(settings);
+			gc.start(function (err, timer1) {
+				gc.start(function (err, timer2) {
+					expect(timer1).to.not.equal(timer2);
+					gc.stop();
+					done();
+				});
+			});
+		});
+	});
+
+	lab.experiment('#stop', function () {
+		lab.test('stops timer', function (done) {
+			var gc = new Gc(settings);
+			gc.start();
+			gc.stop();
+			expect(gc._timer).to.equal(null);
 			done();
 		});
 
-		it('deletes expired items', function (done) {
+		lab.test('does nothing if not started', function (done) {
+			var gc = new Gc(settings);
+			gc.stop();
+			expect(gc._timer).to.equal(null);
+			done();
+		});
+	});
+
+	lab.experiment('#collect', function () {
+		lab.test('deletes expired items', function (done) {
+			var gcExp = new Gc(settings);
 			var segment = 'ttltest1';
 			var set = function (id, callback) {
-				client.set({
+				atableClient.set({
 					id : id,
 					segment : segment
 				}, {
@@ -111,28 +96,34 @@ describe('AzureTable GC', {
 			async.each(itemIds, function (id, cb) {
 				set(id, cb);
 			}, function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 
-				gc.collect(function (err) {
-					expect(err).to.not.exist;
+				console.log('listening on event');
+				gcExp.once('collected', function (err) {
+					expect(err).to.not.exist();
 
-					var query = new AzureStorage.TableQuery()
-						.top(100).select('PartitionKey', 'RowKey')
-						.where('PartitionKey == ?string?', segment);
-
-					gc.client.queryEntities(options.partition, query, null, function (err, result) {
-						expect(err).to.equal(null);
-						expect(result.entries).to.have.length(0);
+					atableClient.get({
+						id : '3',
+						segment : segment
+					}, function (err, item) {
+						expect(item).to.not.exist();
 						done();
 					});
 				});
+
+				setTimeout(function () {
+					gcExp.collect(function (err) {
+						expect(err).to.not.exist();
+					});
+				}, 200);
 			});
 		});
 
-		it('ignores items that should not be collected -> gc == false', function (done) {
+		lab.test('ignores items that should not be collected -> gc == false', function (done) {
+			var gc = new Gc(settings);
 			var segment = 'ttltest2';
 			var set = function (id, callback) {
-				client.set({
+				atableClient.set({
 					id : id,
 					segment : segment
 				}, {
@@ -145,20 +136,20 @@ describe('AzureTable GC', {
 			async.each(itemIds, function (id, cb) {
 				set(id, cb);
 			}, function (err) {
-				expect(err).to.not.exist;
+				expect(err).to.not.exist();
 
-				client.generateRow({
+				atableClient.generateRow({
 					id : '6',
 					segment : segment
 				}, {
 					cacheforever : true
 				}, 50, false, function (err, insertData) {
 
-					client.client.insertOrMergeEntity(client.tableName, insertData, null, function (err) {
-						expect(err).to.not.exist;
+					atableClient.client.insertOrMergeEntity(atableClient.tableName, insertData, null, function (err) {
+						expect(err).to.not.exist();
 
-						gc.collect(function (err) {
-							expect(err).to.not.exist;
+						gc.once('collected', function (err) {
+							expect(err).to.not.exist();
 
 							var query = new AzureStorage.TableQuery()
 								.top(100).select('PartitionKey', 'RowKey')
@@ -171,20 +162,28 @@ describe('AzureTable GC', {
 								done();
 							});
 						});
+
+						setTimeout(function () {
+							gc.collect(function (err) {
+								expect(err).to.not.exist();
+							});
+						}, 200);
 					});
 				});
 			});
 		});
 
-		it('returns error in callback if partition (table name) is invalid', function (done) {
+		lab.test('returns error in callback if partition (table name) is invalid', function (done) {
+			var gc = new Gc(settings);
 			gc.tableName = 'cache-me';
 			gc.collect(function (err) {
-				expect(err).to.exist;
+				expect(err).to.exist();
 				done();
 			});
 		});
 
-		it('returns null in callback if no items where found', function (done) {
+		lab.test('returns null in callback if no items where found', function (done) {
+			var gc = new Gc(settings);
 			gc.collect(function () {
 				gc.collect(function (err) {
 					expect(err).to.equal(null);
@@ -193,7 +192,8 @@ describe('AzureTable GC', {
 			});
 		});
 
-		it('works without callback', function (done) {
+		lab.test('works without callback', function (done) {
+			var gc = new Gc(settings);
 			var fn = function () {
 				gc.collect();
 			};
@@ -203,11 +203,11 @@ describe('AzureTable GC', {
 		});
 	});
 
-	describe('internals', function () {
+	lab.experiment('internals', function () {
 
-		describe('#_createBatches', function () {
-			it('creates batches per PartitionKey', function (done) {
-				var gc = new Gc(atableClient.settings);
+		lab.experiment('#_createBatches', function () {
+			lab.test('creates batches per PartitionKey', function (done) {
+				var gc = new Gc(settings);
 
 				var entGen = AzureStorage.TableUtilities.entityGenerator;
 				var entries = [{
@@ -220,16 +220,16 @@ describe('AzureTable GC', {
 				];
 
 				gc._createBatches(entries, function (err, batches) {
-					expect(err).to.not.exist;
+					expect(err).to.not.exist();
 					expect(batches).to.be.an.object();
-					expect(batches.segment1).to.exist;
-					expect(batches.segment2).to.exist;
+					expect(batches.segment1).to.exist();
+					expect(batches.segment2).to.exist();
 					done();
 				});
 			});
 
-			it('can creates batches of size 100', function (done) {
-				var gc = new Gc(atableClient.settings);
+			lab.test('can creates batches of size 100', function (done) {
+				var gc = new Gc(settings);
 				var entGen = AzureStorage.TableUtilities.entityGenerator;
 				var entries = [];
 				for (var i = 0; i < 100; i++) {
@@ -240,9 +240,9 @@ describe('AzureTable GC', {
 				}
 
 				gc._createBatches(entries, function (err, batches) {
-					expect(err).to.not.exist;
+					expect(err).to.not.exist();
 					expect(batches).to.be.an.object();
-					expect(batches.segment3).to.exist;
+					expect(batches.segment3).to.exist();
 					expect(batches.segment3.operations).to.have.length(100);
 
 					gc.client.executeBatch(options.partition, batches.segment3, function () {
@@ -251,8 +251,8 @@ describe('AzureTable GC', {
 				});
 			});
 
-			it('returns error in callback if batch insert failed', function (done) {
-				var gc = new Gc(atableClient.settings);
+			lab.test('returns error in callback if batch insert failed', function (done) {
+				var gc = new Gc(settings);
 
 				var entGen = AzureStorage.TableUtilities.entityGenerator;
 				var entries = [{
@@ -264,16 +264,46 @@ describe('AzureTable GC', {
 				];
 
 				gc._createBatches(entries, function (err, batches) {
-					expect(err).to.exist;
+					expect(err).to.exist();
 					done();
 				});
 			});
 		});
 
-		describe('#_delete', function () {
-			it('returns error in callback if batch insert failed', function (done) {
-				var gc = new Gc(atableClient.settings);
+		lab.experiment('#_delete', function () {
+			var gc = new Gc(settings);
+			lab.test('deletes item', function (done) {
+				var key = {
+					id : 'delete-test-1',
+					segment : '_delete'
+				};
 
+				atableClient.set(key, {
+					cacheme : true
+				}, 50, function (err) {
+					expect(err).to.not.exist();
+					var entGen = AzureStorage.TableUtilities.entityGenerator;
+					var entries = [{
+							PartitionKey : entGen.String(key.id),
+							RowKey : entGen.String(key.segment)
+						}
+					];
+					gc._delete(entries, function (err, res) {
+						expect(err).to.not.exist();
+						console.log(res);
+
+                        setTimeout(function() {
+                            atableClient.get(key, function (err, item) {
+                                expect(err).to.not.exist();
+                                expect(item).to.not.exist();
+                                done();
+                            });
+                        }, 200);
+					});
+				});
+			});
+
+			lab.test('returns error in callback if batch insert failed', function (done) {
 				var entGen = AzureStorage.TableUtilities.entityGenerator;
 				var entries = [{
 						PartitionKey : entGen.String('segment1')
@@ -284,7 +314,7 @@ describe('AzureTable GC', {
 				];
 
 				gc._delete(entries, function (err, batches) {
-					expect(err).to.exist;
+					expect(err).to.exist();
 					done();
 				});
 			});
@@ -292,10 +322,10 @@ describe('AzureTable GC', {
 
 	});
 
-	after(function (done) {
+	lab.after(function (done) {
 		var tableService = AzureStorage.createTableService(atableClient.settings.connection);
 		tableService.deleteTableIfExists(atableClient.settings.partition, function (err) {
-			expect(err).to.not.exist;
+			expect(err).to.not.exist();
 			done();
 		});
 	});
