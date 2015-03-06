@@ -3,13 +3,15 @@
         "node": true
     },
     "rules": {
-        "strict": 0,
+        "indent": 2,
+        "strict": 1,
         "consistant-this": ["_self"],
         "quotes": [2, "single"],
         "no-underscore-dangle": 0,
         "camelcase": 0,
         "new-cap": 0,
         "no-octal-escape": 0,
-        "key-spacing": 0
+        "key-spacing": 0,
+        "no-shadow": 0
     }
 }
