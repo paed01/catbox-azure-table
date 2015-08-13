@@ -3,9 +3,7 @@
         "node": true
     },
     "rules": {
-        "indent": 2,
-        "strict": 1,
-        "consistant-this": ["_self"],
+        "strict": [2, "global"],
         "quotes": [2, "single"],
         "no-underscore-dangle": 0,
         "camelcase": 0,

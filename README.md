@@ -18,7 +18,7 @@ npm install catbox-azure-table
 
 ### Notes
 
-The default option for connection is set to use the [Azure Storage Emulator](http://msdn.microsoft.com/en-us/library/azure/hh403989.aspx). This feature must be installed and started to run the tests.
+The default option for connection is set to use the [Azure Storage Emulator](https://azure.microsoft.com/en-us/documentation/articles/storage-use-emulator/). This feature must be installed and started to run the tests.
 
 When setting or getting cache-items `segment` translates to Azure Table Storage `partitionKey`.
 

@@ -95,7 +95,7 @@ lab.experiment('AzureTable GC', function () {
 
             var itemIds = ['1', '2', '3'];
 
-            async.each(itemIds, function (id, cb) {
+            async.eachSeries(itemIds, function (id, cb) {
                 set(id, cb);
             }, function (err) {
                 expect(err).to.not.exist();
@@ -135,7 +135,7 @@ lab.experiment('AzureTable GC', function () {
 
             var itemIds = ['4', '5'];
 
-            async.each(itemIds, function (id, cb) {
+            async.eachSeries(itemIds, function (id, cb) {
                 set(id, cb);
             }, function (err) {
                 expect(err).to.not.exist();
