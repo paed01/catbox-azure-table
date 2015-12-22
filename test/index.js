@@ -612,7 +612,7 @@ lab.experiment('AzureTable', () => {
 
         client.get(key, (getErr) => {
           expect(getErr).to.exist();
-          expect(err.message).to.equal('Bad value content');
+          expect(getErr.message).to.equal('Bad value content');
           done();
         });
       });

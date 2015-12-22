@@ -216,13 +216,11 @@ lab.experiment('AzureTable GC', () => {
           RowKey: entGen.String('1')
         }];
 
-        Gc._createDeleteBatches(entries, (err, batches) => {
-          expect(err).to.not.exist();
-          expect(batches).to.be.an.object();
-          expect(batches.segment1).to.exist();
-          expect(batches.segment2).to.exist();
-          done();
-        });
+        let batches = Gc._createDeleteBatches(entries);
+        expect(batches).to.be.an.object();
+        expect(batches.segment1).to.exist();
+        expect(batches.segment2).to.exist();
+        done();
       });
 
       lab.test('can creates batches of size 100', (done) => {
@@ -236,19 +234,17 @@ lab.experiment('AzureTable GC', () => {
           });
         }
 
-        Gc._createDeleteBatches(entries, (err, batches) => {
-          expect(err).to.not.exist();
-          expect(batches).to.be.an.object();
-          expect(batches.segment3).to.exist();
-          expect(batches.segment3.operations).to.have.length(100);
+        let batches = Gc._createDeleteBatches(entries);
+        expect(batches).to.be.an.object();
+        expect(batches.segment3).to.exist();
+        expect(batches.segment3.operations).to.have.length(100);
 
-          gc.client.executeBatch(options.partition, batches.segment3, () => {
-            done();
-          });
+        gc.client.executeBatch(options.partition, batches.segment3, () => {
+          return done();
         });
       });
 
-      lab.test('returns error in callback if batch insert failed', (done) => {
+      lab.test('returns error in batch if batch insert failed', (done) => {
         const entGen = AzureStorage.TableUtilities.entityGenerator;
         const entries = [{
           PartitionKey: entGen.String('segment1')
@@ -257,10 +253,9 @@ lab.experiment('AzureTable GC', () => {
           RowKey: entGen.String('1')
         }];
 
-        Gc._createDeleteBatches(entries, (err) => {
-          expect(err).to.exist();
-          done();
-        });
+        let batches = Gc._createDeleteBatches(entries);
+        expect(batches.segment1.error).to.exist();
+        done();
       });
     });
 
@@ -296,7 +291,7 @@ lab.experiment('AzureTable GC', () => {
         });
       });
 
-      lab.test('returns error in callback if batch insert failed', (done) => {
+      lab.test('emits delete-error if batch insert failed', (done) => {
         const entGen = AzureStorage.TableUtilities.entityGenerator;
         const entries = [{
           PartitionKey: entGen.String('segment1')
@@ -305,9 +300,13 @@ lab.experiment('AzureTable GC', () => {
           RowKey: entGen.String('1')
         }];
 
-        gc._delete(entries, (err) => {
+        gc.once('delete-error', (err) => {
           expect(err).to.exist();
           done();
+        });
+
+        gc._delete(entries, (err) => {
+          expect(err).to.not.exist();
         });
       });
     });
