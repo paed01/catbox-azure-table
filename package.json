@@ -1,7 +1,7 @@
 {
   "name": "catbox-azure-table",
   "description": "Azure Table Storage adapter for catbox",
-  "version": "2.4.2",
+  "version": "2.5.0",
   "author": "Pål Edman <pal.edman@outlook.com>",
   "contributors": [],
   "homepage": "https://github.com/paed01/catbox-azure-table",
@@ -34,9 +34,9 @@
   },
   "devDependencies": {
     "catbox": "7.x.x",
-    "code": "^2.2.1",
-    "coveralls": "^2.11.8",
-    "lab": "^10.3.2"
+    "code": "^3.0.0",
+    "coveralls": "^2.11.9",
+    "lab": "^10.7.0"
   },
   "scripts": {
     "test": "node node_modules/lab/bin/lab -vc -m 15000 -L --ignore Reflect"
