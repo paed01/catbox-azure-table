@@ -25,7 +25,7 @@
     "node": ">=4.2"
   },
   "dependencies": {
-    "azure-storage": "1.0.x",
+    "azure-storage": "1.1.x",
     "hoek": "4.x.x",
     "async": "1.x.x"
   },
