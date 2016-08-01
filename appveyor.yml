@@ -8,6 +8,8 @@ environment:
     - nodejs_version: 6
 
 install:
+  - ps: Start-FileDownload 'http://download.microsoft.com/download/7/B/5/7B53AA52-9519-467C-8DC7-1A1FF72500D9/MicrosoftAzureStorageEmulator.msi'
+  - ps: msiexec /i MicrosoftAzureStorageEmulator.msi /quiet /qn /norestart /log install.log
   - ps: Install-Product node $env:nodejs_version
   - npm install
 
