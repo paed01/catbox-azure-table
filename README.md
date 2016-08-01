@@ -18,7 +18,7 @@ npm install catbox-azure-table
 
 ### Notes
 
-The default option for connection is set to use the [Azure Storage Emulator](https://azure.microsoft.com/en-us/documentation/articles/storage-use-emulator/). This feature must be installed and started to run the tests.
+The default option for connection is set to use the [Azure Storage Emulator][1] (v4.4.0). This feature must be installed and started to run the tests.
 
 When setting or getting cache-items `segment` translates to Azure Table Storage `partitionKey`.
 
@@ -29,3 +29,5 @@ Since Azure Table Storage have no built-in ttl function this functionality will 
 If `ttl_interval` is set to `false` the cached entries stored in the table will not be collected even if another `catbox-azure-table` client points to the same table.
 
 Due to a limitation in Azure Table Storage only 100 entries can be deleted at one time, per `PartitionKey` (`segment`). This can cause a problem if there is more than 100 entries created within the `ttl_interval`. But probably the GC will catch up eventually.
+
+[1]: https://azure.microsoft.com/en-us/documentation/articles/storage-use-emulator/
