@@ -43,6 +43,7 @@ lab.experiment('AzureTable GC', () => {
     lab.test('starts timer', (done) => {
       const gc = new Gc(settings);
       gc.start((err, timer) => {
+        if (err) return done(err);
         expect(timer).to.be.an.object();
         gc.stop();
         done();

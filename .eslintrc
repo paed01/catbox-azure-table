@@ -6,6 +6,7 @@
   },
   "extends": "eslint:recommended",
   "rules": {
+    "handle-callback-err": 2,
     "no-alert": 2,
     "no-array-constructor": 2,
     "no-caller": 2,
@@ -50,7 +51,7 @@
     }],
     "camelcase": 0,
     "comma-spacing": 2,
-    "consistent-return": 2,
+    "consistent-return": 0,
     "curly": [2, "multi-line"],
     "dot-notation": [2, {
       "allowKeywords": true
