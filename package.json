@@ -25,7 +25,7 @@
     "node": ">=4.2"
   },
   "files": [
-    "index.js"
+    "index.js",
     "README.md",
     "LICENSE",
     "lib/"
