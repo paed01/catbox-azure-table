@@ -36,7 +36,7 @@
     "async": "2.x.x"
   },
   "peerDependencies": {
-    "catbox": "7.x"
+    "catbox": "8.x"
   },
   "devDependencies": {
     "catbox": "8.x.x",
