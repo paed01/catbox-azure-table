@@ -3,3 +3,5 @@ coverage.*
 npm-debug.log
 .jsbeautifyrc
 .vs*
+package-lock.json
+.eslintcache

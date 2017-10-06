@@ -22,7 +22,7 @@
     "table"
   ],
   "engines": {
-    "node": ">=4.2"
+    "node": ">=8"
   },
   "files": [
     "index.js",
