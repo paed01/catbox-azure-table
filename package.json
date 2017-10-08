@@ -45,7 +45,7 @@
     "nock": "^9.0.22"
   },
   "scripts": {
-    "test": "node node_modules/lab/bin/lab -vc -m 15000 -L"
+    "test": "node node_modules/lab/bin/lab -vcL -m 15000"
   },
   "licenses": [
     {

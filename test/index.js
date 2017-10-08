@@ -178,6 +178,9 @@ describe('AzureTable', () => {
       }
     });
 
+  });
+
+  describe('Eviction', () => {
     it('emits collected event when Gc has collected', (done) => {
       const client = new Client(AzureTable, {
         connection,
