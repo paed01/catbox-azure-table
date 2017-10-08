@@ -44,6 +44,16 @@ describe('AzureTable', () => {
       done();
     });
 
+    it('instantiate without connection string defaults to development storage', (done) => {
+      const client = AzureTable({
+        partition,
+        ttl_interval: false
+      });
+
+      expect(client.getClient().connectionString).to.equal('UseDevelopmentStorage=true;DevelopmentStorageProxyUri=http://127.0.0.1;');
+      done();
+    });
+
     it('instantiate without ttl_interval throws an error', (done) => {
       function fn() {
         new AzureTable({
