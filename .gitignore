@@ -5,3 +5,4 @@ npm-debug.log
 .vs*
 package-lock.json
 .eslintcache
+tmp/
