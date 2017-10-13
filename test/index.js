@@ -180,40 +180,7 @@ describe('AzureTable', () => {
 
   });
 
-  describe('Eviction', () => {
-    it('emits collected event when Gc has collected', (done) => {
-      const client = new Client(AzureTable, {
-        connection,
-        partition,
-        ttl_interval: 50
-      });
-      client.start().then(() => {
-        client.connection.gc.once('collected', () => {
-          done();
-        });
-        client.connection.gc.once('evict-error', done);
-      });
-    });
-
-    it('emits collected event at least 2 times', (done) => {
-      const client = new Client(AzureTable, {
-        connection,
-        partition,
-        ttl_interval: 50
-      });
-
-      client.start().then(() => {
-        client.connection.gc.once('collected', () => {
-          client.connection.gc.once('collected', () => {
-            done();
-          });
-        });
-      });
-    });
-  });
-
   describe('interface', () => {
-
     it('get without starting returns error', (done) => {
       const client = new AzureTable(options);
       client.get({
