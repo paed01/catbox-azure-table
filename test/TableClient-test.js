@@ -23,11 +23,7 @@ describe('TableClient', () => {
       Azure.tableBeingDeletedError();
 
       const client = TableClient(Azure.connectionString, Azure.tableName);
-      try {
-        await client.connect();
-      } catch (err) {
-        expect(err).to.be.an.error();
-      }
+      await expect(client.connect()).to.reject(/The specified table is being deleted/i);
     });
   });
 

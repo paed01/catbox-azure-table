@@ -9,18 +9,19 @@ const {Client} = require('catbox');
 const {Gc} = AzureTable;
 
 const lab = exports.lab = Lab.script();
-const {after, beforeEach, before, describe, it} = lab;
+const {after, afterEach, before, beforeEach, describe, it} = lab;
 const {expect} = Lab.assertions;
 
-const options = {
-  connection: process.env.AZURE_TABLE_CONN,
-  partition: 'unittestcachegc',
-  ttl_interval: 10000
-};
-
-const {connection, partition, ttl_interval} = options;
+const connection = process.env.AZURE_TABLE_CONN;
 
 describe('AzureTable GC', () => {
+  const options = {
+    connection,
+    partition: 'unittestcachegc',
+    ttl_interval: 10000
+  };
+  const {partition, ttl_interval} = options;
+
   let client;
   const timers = [];
 
@@ -143,71 +144,115 @@ describe('AzureTable GC', () => {
       expect(collected).to.equal(0);
     });
   });
-
-  describe('Events', () => {
-    it('emits collected event when Gc has collected', (done) => {
-      const quickGcClient = new Client(AzureTable, {
-        connection,
-        partition,
-        ttl_interval: 50
-      });
-      const gc = quickGcClient.connection.gc;
-      gc.once('collected', () => {
-        client.stop();
-        done();
-      });
-      quickGcClient.start().catch(done);
-    });
-
-    it('emits collected event at least 2 times', (done) => {
-      const quickGcClient = new Client(AzureTable, {
-        connection,
-        partition,
-        ttl_interval: 50
-      });
-      const gc = quickGcClient.connection.gc;
-
-      let count = 0;
-      try {
-        gc.on('collected', function EH() {
-          ++count;
-          if (count > 1) {
-            quickGcClient.stop();
-            gc.removeListener('collected', EH);
-            done();
-          }
-        });
-
-        quickGcClient.start().catch(done);
-      } catch (err) {
-        done(err);
-      }
-    });
-  });
 });
 
-describe('Errors', () => {
+describe('Stop', () => {
   let Azure;
-  before(async () => {
-    Azure = MockAzure('gcerrorstest');
+  beforeEach(async () => {
+    Azure = MockAzure('unittestcachegcstop');
   });
-  after(async () => {
+  afterEach(async () => {
     Azure.reset();
   });
 
-  it('emits evict-error event if Gc failed with StorageError', (done) => {
-    const quickGcClient = new Client(AzureTable, {
+  it('stops timer', (done) => {
+    Azure.connection();
+    Azure.queryEntities(200, Azure.queryResponse());
+    Azure.executeBatch();
+    Azure.queryEntities(200, Azure.queryResponse());
+    Azure.executeBatch();
+    Azure.queryEntities(200, Azure.queryResponse());
+    Azure.executeBatch();
+
+    const client = new Client(AzureTable, {
       connection: Azure.connectionString,
       partition: Azure.tableName,
-      ttl_interval: 50
+      ttl_interval: 41
+    });
+    const gc = client.connection.gc;
+
+    let stopped = false;
+    gc.on('collected', () => {
+      if (stopped) throw new Error('should have been stopped');
+      stopped = true;
+      client.stop();
+    });
+    setTimeout(done, 100);
+
+    client.start().catch(done);
+  });
+});
+
+describe('Events', () => {
+  let Azure;
+  beforeEach(async () => {
+    Azure = MockAzure('unittestcachegcevents');
+    Azure.connection();
+  });
+  afterEach(async () => {
+    Azure.reset();
+  });
+
+  it('emits collected event when Gc has collected', (done) => {
+    const client = new Client(AzureTable, {
+      connection: Azure.connectionString,
+      partition: Azure.tableName,
+      ttl_interval: 51
+    });
+    const gc = client.connection.gc;
+
+    Azure.queryEntities(200, Azure.queryResponse());
+    Azure.executeBatch();
+
+    gc.once('collected', (n) => {
+      client.stop();
+      expect(Azure.isComplete()).to.be.true();
+      expect(n).to.be.a.number();
+      done();
+    });
+    client.start();
+  });
+
+  it('emits collected event at least 2 times', (done) => {
+    const client = new Client(AzureTable, {
+      connection: Azure.connectionString,
+      partition: Azure.tableName,
+      ttl_interval: 52
+    });
+    const gc = client.connection.gc;
+
+    Azure.queryEntities(200, Azure.queryResponse());
+    Azure.executeBatch();
+    Azure.queryEntities(200, Azure.queryResponse());
+    Azure.executeBatch();
+
+    let count = 0;
+    gc.on('collected', function EH(n) {
+      expect(n).to.be.a.number();
+      ++count;
+      if (count > 1) {
+        client.stop();
+        expect(Azure.isComplete()).to.be.true();
+        gc.removeListener('collected', EH);
+        done();
+      }
     });
 
-    Azure.connection();
-    Azure.queryFailed(500);
-    quickGcClient.start();
+    client.start();
+  });
 
-    quickGcClient.connection.gc.once('evict-error', (err) => {
-      quickGcClient.stop();
+  it('emits error if Gc failed with StorageError', (done) => {
+    const client = new Client(AzureTable, {
+      connection: Azure.connectionString,
+      partition: Azure.tableName,
+      ttl_interval: 53
+    });
+
+    Azure.queryFailed(500);
+    client.start();
+
+    client.connection.gc.once('error', (err) => {
+      client.stop();
 
       expect(err).to.be.an.error();
       expect(err.name).to.equal('StorageError');
@@ -218,18 +263,25 @@ describe('Errors', () => {
 
   });
 
-  it('throws if not StorageError', (done) => {
-    Azure.connection();
-    Azure.queryEntities();
+  it('emits error and stops if not StorageError', (done) => {
+    const client = new Client(AzureTable, {
+      connection: Azure.connectionString,
+      partition: Azure.tableName,
+      ttl_interval: 54
+    });
+    const gc = client.connection.gc;
 
-    const gc = Gc(TableClient(Azure.connectionString, Azure.tableName), 200);
+    Azure.queryEntities();
+    Azure.executeBatch();
+
     gc.once('collected', (n) => {
       n.a.b.c = 1;
     });
-    gc.collect().catch((err) => {
+    gc.once('error', (err) => {
       expect(err).to.be.an.error(TypeError);
+      expect(gc.isReady()).to.be.false();
       done();
     });
+    gc.start();
   });
-
 });
