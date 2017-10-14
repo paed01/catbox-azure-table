@@ -31,7 +31,7 @@
     "lib/"
   ],
   "dependencies": {
-    "azure-storage": "^2.5.0",
+    "azure-storage": "^2.6.0",
     "hoek": "5.x.x"
   },
   "peerDependencies": {
