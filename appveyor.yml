@@ -4,6 +4,8 @@
 environment:
   matrix:
     - nodejs_version: 8
+  COVERALLS_REPO_TOKEN:
+    secure: mXGYwR3ZrJJAjWBy8v13rFDU/0VR4Kuq/cBp2rOy8TcPwLdFQmF0Dn14rgSjJYhg
 
 install:
   - ps: Start-FileDownload 'https://download.microsoft.com/download/F/5/D/F5DBACEE-5B9A-4B4E-9382-18145C06F47D/MicrosoftAzureStorageEmulator.msi'
@@ -21,4 +23,7 @@ before_test:
 test_script:
   - node --version
   - npm --version
-  - npm test
+  - npm run test-cov
+
+after_test:
+ - node ./node_modules/coveralls/bin/coveralls.js < ./coverage.lcov
