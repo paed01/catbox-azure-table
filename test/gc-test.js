@@ -41,6 +41,15 @@ describe('AzureTable GC', () => {
     ck.reset();
   });
 
+  describe('init', () => {
+    it('throws if ttl_interval is not a number', (done) => {
+      expect(() => Gc(client.getClient())).to.throw(TypeError);
+      expect(() => Gc(client.getClient(), 'string')).to.throw(TypeError);
+      expect(() => Gc(client.getClient(), {})).to.throw(TypeError);
+      done();
+    });
+  });
+
   describe('start()', () => {
     it('starts timer', (done) => {
       const gc = new Gc(client.getClient(), ttl_interval);
