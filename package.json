@@ -31,14 +31,13 @@
     "lib/"
   ],
   "dependencies": {
-    "azure-storage": "^2.6.0",
-    "hoek": "5.x.x"
+    "azure-storage": "^2.6.0"
   },
   "peerDependencies": {
-    "catbox": "8.x"
+    "catbox": "9.x"
   },
   "devDependencies": {
-    "catbox": "8.x.x",
+    "catbox": "9.x.x",
     "chronokinesis": "^1.3.2",
     "code": "^5.1.0",
     "coveralls": "^3.0.0",
