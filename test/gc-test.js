@@ -30,10 +30,6 @@ describe('AzureTable GC', () => {
   });
   after(async () => {
     client.stop();
-    // timers.forEach((t) => {
-    //   t.unref();
-    //   clearTimeout(t);
-    // });
     await TableClient(connection, partition).deleteTable();
   });
   beforeEach(async () => {
@@ -252,17 +248,6 @@ describe('Events', () => {
 
     client.start();
 
-    // gc.on('collected', function EH(n) {
-    //   expect(n).to.be.a.number();
-    //   ++count;
-    //   if (count > 1) {
-    //     client.stop();
-    //     expect(Azure.isComplete()).to.be.true();
-    //     gc.removeListener('collected', EH);
-    //     done();
-    //   }
-    // });
-
     const n1 = await new Promise((resolve, reject) => {
       gc.once('collected', resolve);
       gc.once('error', reject);
@@ -290,16 +275,6 @@ describe('Events', () => {
     Azure.queryFailed(500);
     client.start();
 
-    // client.connection.gc.once('error', (err) => {
-    //   client.stop();
-
-    //   expect(err).to.be.an.error();
-    //   expect(err.name).to.equal('StorageError');
-    //   expect(err.statusCode).to.equal(500);
-
-    //   done();
-    // });
-
     await expect(new Promise((resolve, reject) => {
       gc.once('collected', resolve);
       gc.once('error', reject);
@@ -320,10 +295,6 @@ describe('Events', () => {
     gc.on('collected', (n) => {
       n.a.b.c = 1;
     });
-    // gc.once('error', (err) => {
-    //   expect(err).to.be.an.error(TypeError);
-    // });
-
     gc.start();
 
     await expect(new Promise((resolve, reject) => {
