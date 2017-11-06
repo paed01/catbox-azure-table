@@ -2,13 +2,15 @@
 
 const AzureStorage = require('azure-storage');
 const AzureTable = require('..');
-const Lab = require('lab');
+// const Lab = require('lab');
 const TableClient = require('../lib/TableClient');
 const {Client} = require('catbox');
 
-const lab = exports.lab = Lab.script();
-const {after, before, describe, it} = lab;
-const {expect} = Lab.assertions;
+// const lab = exports.lab = Lab.script();
+// const {after, before, describe, it} = lab;
+// const {expect} = Lab.assertions;
+
+const {after, before, describe, expect, fail, it} = exports.lab = require('lab').script();
 
 const options = {
   connection: process.env.AZURE_TABLE_CONN,
@@ -24,16 +26,15 @@ describe('AzureTable', () => {
   });
 
   describe('#ctor', () => {
-    it('instantiate without configuration throws error', (done) => {
+    it('instantiate without configuration throws error', () => {
       function fn() {
         new AzureTable();
       }
 
       expect(fn).to.throw(Error);
-      done();
     });
 
-    it('instantiate without partition throws an error', (done) => {
+    it('instantiate without partition throws an error', () => {
       function fn() {
         new AzureTable({
           ttl_interval: false
@@ -41,20 +42,18 @@ describe('AzureTable', () => {
       }
 
       expect(fn).to.throw(Error, /partition/);
-      done();
     });
 
-    it('instantiate without connection string defaults to development storage', (done) => {
+    it('instantiate without connection string defaults to development storage', () => {
       const client = AzureTable({
         partition,
         ttl_interval: false
       });
 
       expect(client.getClient().connectionString).to.equal('UseDevelopmentStorage=true;DevelopmentStorageProxyUri=http://127.0.0.1;');
-      done();
     });
 
-    it('instantiate without ttl_interval throws an error', (done) => {
+    it('instantiate without ttl_interval throws an error', () => {
       function fn() {
         new AzureTable({
           partition: 'catbox'
@@ -62,10 +61,9 @@ describe('AzureTable', () => {
       }
 
       expect(fn).to.throw(Error, /ttl_interval/);
-      done();
     });
 
-    it('instantiate with ttl_interval = true throws an error', (done) => {
+    it('instantiate with ttl_interval = true throws an error', () => {
       function fn() {
         new AzureTable({
           partition: 'catbox',
@@ -74,10 +72,9 @@ describe('AzureTable', () => {
       }
 
       expect(fn).to.throw(Error, /ttl_interval/);
-      done();
     });
 
-    it('instantiate with ttl_interval as string throws an error', (done) => {
+    it('instantiate with ttl_interval as string throws an error', () => {
       function fn() {
         new AzureTable({
           partition: 'catbox',
@@ -86,10 +83,9 @@ describe('AzureTable', () => {
       }
 
       expect(fn).to.throw(Error, /ttl_interval/);
-      done();
     });
 
-    it('instantiate with ttl_interval as an object throws an error', (done) => {
+    it('instantiate with ttl_interval as an object throws an error', () => {
       function fn() {
         new AzureTable({
           partition: 'catbox',
@@ -98,10 +94,9 @@ describe('AzureTable', () => {
       }
 
       expect(fn).to.throw(Error, /ttl_interval/);
-      done();
     });
 
-    it('instantiate with ttl_interval as a function throws an error', (done) => {
+    it('instantiate with ttl_interval as a function throws an error', () => {
       function fn() {
         new AzureTable({
           partition: 'catbox',
@@ -110,10 +105,9 @@ describe('AzureTable', () => {
       }
 
       expect(fn).to.throw(Error, /ttl_interval/);
-      done();
     });
 
-    it('instantiate with ttl_interval as null throws an error', (done) => {
+    it('instantiate with ttl_interval as null throws an error', () => {
       function fn() {
         new AzureTable({
           partition: 'catbox',
@@ -122,10 +116,9 @@ describe('AzureTable', () => {
       }
 
       expect(fn).to.throw(Error, /ttl_interval/);
-      done();
     });
 
-    it('instantiate with ttl_interval as number throws no error', (done) => {
+    it('instantiate with ttl_interval as number throws no error', () => {
       function fn() {
         new AzureTable({
           partition: 'catbox',
@@ -134,7 +127,6 @@ describe('AzureTable', () => {
       }
 
       expect(fn).to.not.throw();
-      done();
     });
   });
 
@@ -145,14 +137,14 @@ describe('AzureTable', () => {
       expect(client.isReady()).to.equal(true);
     });
 
-    it('returns no error if called twice', async () => {
+    it('second call to start is ignored if started', async () => {
       const client = new Client(AzureTable, options);
       await client.start();
       await client.start();
       expect(client.isReady()).to.equal(true);
     });
 
-    it('throws if partition (tableName) does not match naming convention', async () => {
+    it('throws if partition (tableName) does not match naming convention', () => {
       try {
         new Client(AzureTable, {
           connection,
@@ -181,54 +173,58 @@ describe('AzureTable', () => {
   });
 
   describe('interface', () => {
-    it('get without starting returns error', (done) => {
+    it('get without starting returns error', () => {
       const client = new AzureTable(options);
-      client.get({
+      return client.get({
         id: '1',
         segment: '2'
+      }).then(() => {
+        fail('Should not be ok');
       }).catch((err) => {
         expect(err).to.be.an.error(/Connection not started/i);
-        done();
       });
     });
 
-    it('set without starting returns error', (done) => {
+    it('set without starting returns error', async () => {
       const client = new AzureTable(options);
-      client.set({
+      return client.set({
         id: '1',
         segment: '2'
       }, {
         cacheme: true
-      }, Infinity).catch((err) => {
+      }, Infinity).then(() => {
+        fail('Should not be ok');
+      }).catch((err) => {
         expect(err).to.be.an.error(/Connection not started/i);
-        done();
       });
     });
 
-    it('get with invalid id returns error', (done) => {
+    it('get with invalid id returns error', async () => {
       const client = new AzureTable(options);
-      client.start().then(() => {
+      return client.start().then(() => {
         client.get({
           id: 'two\rlines',
           segment: '2'
+        }).then(() => {
+          fail('Should not be ok');
         }).catch((err) => {
           expect(err).to.be.an.error(/invalid/i);
-          done();
         });
       });
     });
 
-    it('set with invalid id returns error', (done) => {
+    it('set with invalid id returns error', async () => {
       const client = new AzureTable(options);
-      client.start().then(() => {
+      return client.start().then(() => {
         client.set({
           id: 'two\rlines',
           segment: '2'
         }, {
           cacheme: true
-        }, Infinity).catch((err) => {
+        }, Infinity).then(() => {
+          fail('Should not be ok');
+        }).catch((err) => {
           expect(err).to.be.an.error(/invalid/i);
-          done();
         });
       });
     });
@@ -255,15 +251,16 @@ describe('AzureTable', () => {
       expect(data).to.equal(null);
     });
 
-    it('drop item with invalid id returns error', (done) => {
+    it('drop item with invalid id returns error', async () => {
       const client = new AzureTable(options);
-      client.start().then(() => {
+      return client.start().then(() => {
         client.drop({
           id: 'two\rlines',
           segment: '2'
+        }).then(() => {
+          fail('Should not be ok');
         }).catch((err) => {
           expect(err).to.be.an.error();
-          done();
         });
       });
     });
@@ -291,14 +288,13 @@ describe('AzureTable', () => {
       expect(client.isReady()).to.be.false();
     });
 
-    it('can be stopped even if not started', (done) => {
+    it('can be stopped even if not started', () => {
       const client = new Client(AzureTable, options);
       function fn() {
         client.stop();
       }
 
       expect(fn).to.not.throw();
-      done();
     });
 
     it('can be started again', async () => {
@@ -324,10 +320,9 @@ describe('AzureTable', () => {
   });
 
   describe('isReady()', () => {
-    it('returns false if not started', (done) => {
+    it('returns false if not started', () => {
       const client = new Client(AzureTable, options);
       expect(client.isReady()).to.not.be.true();
-      done();
     });
 
     it('returns true if started', async () => {
@@ -338,34 +333,29 @@ describe('AzureTable', () => {
   });
 
   describe('validateSegmentName()', () => {
-    it('returns null if validated', (done) => {
+    it('returns null if validated', () => {
       const client = new Client(AzureTable, options);
       expect(client.validateSegmentName('table')).to.be.null();
-      done();
     });
 
-    it('returns Error if empty string', (done) => {
+    it('returns Error if empty string', () => {
       const client = new Client(AzureTable, options);
       expect(client.validateSegmentName('')).to.be.instanceOf(Error);
-      done();
     });
 
-    it('returns Error if nothing passed', (done) => {
+    it('returns Error if nothing passed', () => {
       const client = new Client(AzureTable, options);
       expect(client.validateSegmentName()).to.be.instanceOf(Error);
-      done();
     });
 
-    it('returns Error if null', (done) => {
+    it('returns Error if null', () => {
       const client = new Client(AzureTable, options);
       expect(client.validateSegmentName(null)).to.be.instanceOf(Error);
-      done();
     });
 
-    it('returns Error if \\0', (done) => {
+    it('returns Error if \\0', () => {
       const client = new Client(AzureTable, options);
       expect(client.validateSegmentName('\0')).to.be.instanceOf(Error);
-      done();
     });
   });
 
@@ -377,7 +367,7 @@ describe('AzureTable', () => {
       await client.start();
     });
 
-    it('without started client returns error in callback', (done) => {
+    it('without started client returns error in callback', async () => {
       const rawclient = new AzureTable(options);
       const d = {
         cache: true
@@ -386,9 +376,10 @@ describe('AzureTable', () => {
         id: 'item 2',
         segment: 'unittest'
       };
-      rawclient.set(key, d, 10000).catch((err) => {
+      return rawclient.set(key, d, 10000).then(() => {
+        fail('Should not be ok');
+      }).catch((err) => {
         expect(err).to.be.an.error(/not started/);
-        done();
       });
     });
 
@@ -465,19 +456,20 @@ describe('AzureTable', () => {
       await client.start();
     });
 
-    it('without started client returns error in callback', (done) => {
+    it('without started client returns error in callback', async () => {
       const rawclient = new AzureTable(options);
       const key = {
         id: 'item 2',
         segment: 'unittest'
       };
-      rawclient.get(key).catch((err) => {
+      return rawclient.get(key).then(() => {
+        fail('Should not be ok');
+      }).catch((err) => {
         expect(err).to.be.an.error(/not started/);
-        done();
       });
     });
 
-    it('fetches object from cache', (done) => {
+    it('fetches object from cache', async () => {
       const key = {
         id: 'item 2',
         segment: 'unittest'
@@ -485,12 +477,9 @@ describe('AzureTable', () => {
       const d = {
         cache: true
       };
-      client.set(key, d, 10000).then(() => {
-        client.get(key).then((item) => {
-          expect(item).to.exist();
-          done();
-        });
-      });
+      await client.set(key, d, 10000);
+      const item = await client.get(key);
+      expect(item).to.exist();
     });
 
     it('fetches object with same data', async () => {
@@ -532,7 +521,7 @@ describe('AzureTable', () => {
       expect(data).to.not.exist();
     });
 
-    it('with non-json data in table returns error in callback', (done) => {
+    it('with non-json data in table returns error in callback', async () => {
       const key = {
         id: 'Wrongly formatted 1',
         segment: 'unittest'
@@ -545,13 +534,16 @@ describe('AzureTable', () => {
         ttl: entGen.Int64(10)
       };
 
-      client.connection.getClient().insert(entity).then(() => {
-        return client.get(key).catch((getErr) => {
-          expect(getErr).to.exist();
-          expect(getErr.message).to.match(/Bad value content/i);
-          done();
-        });
-      }).catch(done);
+      const rawclient = client.connection.getClient();
+      await rawclient.insert(entity);
+
+      try {
+        await client.get(key);
+      } catch (err) {
+        var getErr = err; // eslint-disable-line
+      }
+      expect(getErr).to.exist();
+      expect(getErr.message).to.match(/Bad value content/i);
     });
 
     it('returns stored as timestamp', async () => {
@@ -590,18 +582,6 @@ describe('AzureTable', () => {
       await client.start();
     });
 
-    it('without started client returns error in callback', (done) => {
-      const rawclient = new AzureTable(options);
-      const key = {
-        id: 'item 4',
-        segment: 'unittest'
-      };
-      rawclient.drop(key).catch((err) => {
-        expect(err).to.exist();
-        done();
-      });
-    });
-
     it('drops object from cache', async () => {
       const key = {
         id: 'item 4',
@@ -618,23 +598,43 @@ describe('AzureTable', () => {
       expect(data).to.be.null();
     });
 
-    it('with non-existing key id returns nothing', async () => {
+    it('errors on drop when using invalid key', async () => {
+      await expect(client.drop({})).to.reject();
+    });
+
+    it('errors on drop when using null key', async () => {
+      await expect(client.drop(null)).to.reject();
+    });
+
+    it('no errors with non-existing key id', async () => {
       const key = {
         id: 'no-item 2',
         segment: 'unittest'
       };
-      const data = await client.drop(key);
-      expect(data).to.be.null();
+      await client.drop(key);
     });
 
-    it('with non-existing segment returns nothing', async () => {
+    it('no error with non-existing segment', async () => {
       const key = {
         id: 'no-item 2',
         segment: 'unittest-non-existing'
       };
-      const data = await client.drop(key);
-      expect(data).to.be.null();
+      await client.drop(key);
     });
 
+    it('without started client throws', async () => {
+      const rawclient = new AzureTable(options);
+      const key = {
+        id: 'item 4',
+        segment: 'unittest'
+      };
+
+      try {
+        await rawclient.drop(key);
+      } catch (err) {
+        var dropErr = err; // eslint-disable-line
+      }
+      expect(dropErr).to.exist();
+    });
   });
 });

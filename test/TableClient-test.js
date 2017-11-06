@@ -1,12 +1,9 @@
 'use strict';
 
-const Lab = require('lab');
 const MockAzure = require('./MockAzure');
 const TableClient = require('../lib/TableClient');
-const {expect} = require('code');
 
-const lab = exports.lab = Lab.script();
-const {after, before, describe, it} = lab;
+const {after, before, describe, expect, it} = exports.lab = require('lab').script();
 
 describe('TableClient', () => {
   let Azure;

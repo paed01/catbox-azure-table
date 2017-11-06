@@ -23,7 +23,6 @@ describe('AzureTable GC', () => {
   const {partition, ttl_interval} = options;
 
   let client;
-  const timers = [];
 
   before(async () => {
     client = new AzureTable(options);
@@ -31,10 +30,10 @@ describe('AzureTable GC', () => {
   });
   after(async () => {
     client.stop();
-    timers.forEach((t) => {
-      t.unref();
-      clearTimeout(t);
-    });
+    // timers.forEach((t) => {
+    //   t.unref();
+    //   clearTimeout(t);
+    // });
     await TableClient(connection, partition).deleteTable();
   });
   beforeEach(async () => {
@@ -42,59 +41,70 @@ describe('AzureTable GC', () => {
   });
 
   describe('init', () => {
-    it('throws if ttl_interval is not a number', (done) => {
+    it('throws if ttl_interval is not a number', () => {
       expect(() => Gc(client.getClient())).to.throw(TypeError);
       expect(() => Gc(client.getClient(), 'string')).to.throw(TypeError);
       expect(() => Gc(client.getClient(), {})).to.throw(TypeError);
-      done();
     });
   });
 
   describe('start()', () => {
-    it('starts timer', (done) => {
+    it('starts timer', (flags) => {
       const gc = new Gc(client.getClient(), ttl_interval);
-      timers.push(gc.start());
+      const timer = gc.start();
+
+      flags.onCleanup = () => {
+        timer.unref();
+        clearTimeout(timer);
+      };
+
       expect(gc.isReady()).to.be.true();
-      done();
     });
 
-    it('once', (done) => {
+    it('once', (flags) => {
       const gc = new Gc(client.getClient(), ttl_interval);
 
       const timer = gc.start();
-      timers.push(gc.start());
+      flags.onCleanup = () => {
+        timer.unref();
+        clearTimeout(timer);
+      };
 
       expect(gc.isReady()).to.be.true();
-
       expect(gc.start()).to.equal(timer);
-
       expect(gc.isReady()).to.be.true();
-      done();
     });
 
-    it('returns timer', (done) => {
+    it('returns timer', (flags) => {
       const gc = new Gc(client.getClient(), ttl_interval);
       const timer = gc.start();
-      timers.push(timer);
       expect(timer).to.be.an.object();
-      done();
+
+      flags.onCleanup = () => {
+        timer.unref();
+        clearTimeout(timer);
+      };
     });
   });
 
   describe('stop()', () => {
-    it('stops timer', (done) => {
+    it('stops timer', (flags) => {
       const gc = new Gc(client.getClient(), ttl_interval);
-      timers.push(gc.start());
+      const timer = gc.start();
+      flags.onCleanup = () => {
+        timer.unref();
+        clearTimeout(timer);
+      };
+
       gc.stop();
       expect(gc.isReady()).to.be.false();
-      done();
     });
 
-    it('does nothing if not started', (done) => {
+    it('does nothing if not started', () => {
       const gc = new Gc(client.getClient(), ttl_interval);
+      expect(gc.isReady()).to.be.false();
       gc.stop();
       expect(gc.isReady()).to.be.false();
-      done();
     });
   });
 
@@ -164,7 +174,7 @@ describe('Stop', () => {
     Azure.reset();
   });
 
-  it('stops timer', (done) => {
+  it('stops timer', async () => {
     Azure.connection();
     Azure.queryEntities(200, Azure.queryResponse());
     Azure.executeBatch();
@@ -186,9 +196,11 @@ describe('Stop', () => {
       stopped = true;
       client.stop();
     });
-    setTimeout(done, 100);
 
-    client.start().catch(done);
+    client.start();
+    return new Promise((resolve) => {
+      setTimeout(resolve, 100);
+    });
   });
 });
 
@@ -202,7 +214,7 @@ describe('Events', () => {
     Azure.reset();
   });
 
-  it('emits collected event when Gc has collected', (done) => {
+  it('emits collected event when Gc has collected', async () => {
     const client = new Client(AzureTable, {
       connection: Azure.connectionString,
       partition: Azure.tableName,
@@ -213,16 +225,19 @@ describe('Events', () => {
     Azure.queryEntities(200, Azure.queryResponse());
     Azure.executeBatch();
 
-    gc.once('collected', (n) => {
-      client.stop();
-      expect(Azure.isComplete()).to.be.true();
-      expect(n).to.be.a.number();
-      done();
-    });
     client.start();
+
+    const n = await new Promise((resolve, reject) => {
+      gc.once('collected', resolve);
+      gc.once('error', reject);
+    });
+
+    client.stop();
+    expect(Azure.isComplete()).to.be.true();
+    expect(n).to.be.a.number();
   });
 
-  it('emits collected event at least 2 times', (done) => {
+  it('emits collected event at least 2 times', async () => {
     const client = new Client(AzureTable, {
       connection: Azure.connectionString,
       partition: Azure.tableName,
@@ -235,44 +250,63 @@ describe('Events', () => {
     Azure.queryEntities(200, Azure.queryResponse());
     Azure.executeBatch();
 
-    let count = 0;
-    gc.on('collected', function EH(n) {
-      expect(n).to.be.a.number();
-      ++count;
-      if (count > 1) {
-        client.stop();
-        expect(Azure.isComplete()).to.be.true();
-        gc.removeListener('collected', EH);
-        done();
-      }
+    client.start();
+
+    // gc.on('collected', function EH(n) {
+    //   expect(n).to.be.a.number();
+    //   ++count;
+    //   if (count > 1) {
+    //     client.stop();
+    //     expect(Azure.isComplete()).to.be.true();
+    //     gc.removeListener('collected', EH);
+    //     done();
+    //   }
+    // });
+
+    const n1 = await new Promise((resolve, reject) => {
+      gc.once('collected', resolve);
+      gc.once('error', reject);
+    });
+    const n2 = await new Promise((resolve, reject) => {
+      gc.once('collected', resolve);
+      gc.once('error', reject);
     });
 
-    client.start();
+    client.stop();
+
+    expect(Azure.isComplete()).to.be.true();
+    expect(n1).to.be.a.number();
+    expect(n2).to.be.a.number();
   });
 
-  it('emits error if Gc failed with StorageError', (done) => {
+  it('emits error if Gc failed with StorageError', async () => {
     const client = new Client(AzureTable, {
       connection: Azure.connectionString,
       partition: Azure.tableName,
       ttl_interval: 53
     });
+    const gc = client.connection.gc;
 
     Azure.queryFailed(500);
     client.start();
 
-    client.connection.gc.once('error', (err) => {
-      client.stop();
+    // client.connection.gc.once('error', (err) => {
+    //   client.stop();
 
-      expect(err).to.be.an.error();
-      expect(err.name).to.equal('StorageError');
-      expect(err.statusCode).to.equal(500);
+    //   expect(err).to.be.an.error();
+    //   expect(err.name).to.equal('StorageError');
+    //   expect(err.statusCode).to.equal(500);
 
-      done();
-    });
+    //   done();
+    // });
 
+    await expect(new Promise((resolve, reject) => {
+      gc.once('collected', resolve);
+      gc.once('error', reject);
+    })).to.reject();
   });
 
-  it('emits error and stops if not StorageError', (done) => {
+  it('emits error and stops if not StorageError', async () => {
     const client = new Client(AzureTable, {
       connection: Azure.connectionString,
       partition: Azure.tableName,
@@ -283,14 +317,20 @@ describe('Events', () => {
     Azure.queryEntities();
     Azure.executeBatch();
 
-    gc.once('collected', (n) => {
+    gc.on('collected', (n) => {
       n.a.b.c = 1;
     });
-    gc.once('error', (err) => {
-      expect(err).to.be.an.error(TypeError);
-      expect(gc.isReady()).to.be.false();
-      done();
-    });
+    // gc.once('error', (err) => {
+    //   expect(err).to.be.an.error(TypeError);
+    // });
+
     gc.start();
+
+    await expect(new Promise((resolve, reject) => {
+      gc.once('collected', resolve);
+      gc.once('error', reject);
+    })).to.reject(TypeError);
+
+    expect(gc.isReady()).to.be.false();
   });
 });
