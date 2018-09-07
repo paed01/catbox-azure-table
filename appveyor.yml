@@ -9,7 +9,7 @@ environment:
     secure: mXGYwR3ZrJJAjWBy8v13rFDU/0VR4Kuq/cBp2rOy8TcPwLdFQmF0Dn14rgSjJYhg
 
 install:
-  - ps: Start-FileDownload 'https://download.microsoft.com/download/F/5/D/F5DBACEE-5B9A-4B4E-9382-18145C06F47D/MicrosoftAzureStorageEmulator.msi'
+  - ps: Start-FileDownload 'https://download.visualstudio.microsoft.com/download/pr/12905117/3bd7826884edd5468c8819a04e871dfe/MicrosoftAzureStorageEmulator.msi'
   - ps: msiexec /i MicrosoftAzureStorageEmulator.msi /quiet /qn /norestart /log install.log
   - ps: Install-Product node $env:nodejs_version
   - npm install
