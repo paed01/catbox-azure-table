@@ -1,8 +1,11 @@
 {
   "name": "catbox-azure-table",
   "description": "Azure Table Storage adapter for catbox",
-  "version": "3.2.0",
-  "author": "Pål Edman <pal.edman@outlook.com>",
+  "version": "3.2.1",
+  "author": {
+    "name": "Pål Edman",
+    "url": "https://github.com/paed01"
+  },
   "contributors": [],
   "homepage": "https://github.com/paed01/catbox-azure-table",
   "repository": {
