@@ -2,15 +2,10 @@
 
 const AzureStorage = require('azure-storage');
 const AzureTable = require('..');
-// const Lab = require('lab');
 const TableClient = require('../lib/TableClient');
-const {Client} = require('catbox');
+const {Client} = require('@hapi/catbox');
 
-// const lab = exports.lab = Lab.script();
-// const {after, before, describe, it} = lab;
-// const {expect} = Lab.assertions;
-
-const {after, before, describe, expect, fail, it} = exports.lab = require('lab').script();
+const {after, before, describe, fail, it} = exports.lab = require('@hapi/lab').script();
 
 const options = {
   connection: process.env.AZURE_TABLE_CONN,

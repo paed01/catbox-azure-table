@@ -1,7 +1,7 @@
 {
   "name": "catbox-azure-table",
   "description": "Azure Table Storage adapter for catbox",
-  "version": "3.2.1",
+  "version": "4.0.0",
   "author": {
     "name": "Pål Edman",
     "url": "https://github.com/paed01"
@@ -24,9 +24,6 @@
     "storage",
     "table"
   ],
-  "engines": {
-    "node": ">=8"
-  },
   "files": [
     "index.js",
     "README.md",
@@ -34,22 +31,22 @@
     "lib/"
   ],
   "dependencies": {
-    "azure-storage": "^2.10.1"
+    "azure-storage": "^2.10.3"
   },
   "peerDependencies": {
-    "catbox": "10.x"
+    "@hapi/catbox": "^11.1.1"
   },
   "devDependencies": {
-    "catbox": "^10.0.2",
-    "chronokinesis": "^2.0.0",
-    "code": "^5.2.0",
-    "coveralls": "^3.0.2",
-    "lab": "^16.0.0",
-    "nock": "^9.6.1"
+    "@hapi/catbox": "^11.1.1",
+    "@hapi/code": "^8.0.3",
+    "@hapi/lab": "^24.1.1",
+    "chronokinesis": "^3.0.0",
+    "coveralls": "^3.1.0",
+    "nock": "^13.0.11"
   },
   "scripts": {
-    "test": "node node_modules/lab/bin/lab -cL -m 15000",
-    "test-cov": "node node_modules/lab/bin/lab -cL -m 15000 -r console -o stdout -r lcov -o coverage.lcov"
+    "test": "lab -cL -m 15000",
+    "test-cov": "lab -cL -m 15000 -r console -o stdout -r lcov -o coverage.lcov"
   },
   "licenses": [
     {

@@ -2,10 +2,10 @@
 
 const AzureTable = require('..');
 const ck = require('chronokinesis');
-const Lab = require('lab');
+const Lab = require('@hapi/lab');
 const MockAzure = require('./MockAzure');
 const TableClient = require('../lib/TableClient');
-const {Client} = require('catbox');
+const {Client} = require('@hapi/catbox');
 const {Gc} = AzureTable;
 
 const lab = exports.lab = Lab.script();

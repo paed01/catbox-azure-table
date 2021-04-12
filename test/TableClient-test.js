@@ -3,7 +3,7 @@
 const MockAzure = require('./MockAzure');
 const TableClient = require('../lib/TableClient');
 
-const {after, before, describe, expect, it} = exports.lab = require('lab').script();
+const {after, before, describe, expect, it} = exports.lab = require('@hapi/lab').script();
 
 describe('TableClient', () => {
   let Azure;

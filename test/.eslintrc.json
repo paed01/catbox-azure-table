@@ -2,5 +2,8 @@
   "rules": {
     "no-new": 0,
     "consistent-return": 0
+  },
+  "globals": {
+    "expect": false
   }
 }
