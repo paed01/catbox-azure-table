@@ -1,14 +1,14 @@
 catbox-azure-table
 ===========
 
-[![Build status](https://ci.appveyor.com/api/projects/status/anrkvdxmentpi1e5/branch/master?svg=true)](https://ci.appveyor.com/project/paed01/catbox-azure-table/branch/master) [![Coverage Status](https://coveralls.io/repos/github/paed01/catbox-azure-table/badge.svg?branch=master)](https://coveralls.io/github/paed01/catbox-azure-table?branch=master) [![Dependency Status](https://david-dm.org/paed01/catbox-azure-table.svg)](https://david-dm.org/paed01/catbox-azure-table) [![peerDependency Status](https://david-dm.org/paed01/catbox-azure-table/peer-status.svg)](https://david-dm.org/paed01/catbox-azure-table#info=peerDependencies)
+[![Build status](https://ci.appveyor.com/api/projects/status/anrkvdxmentpi1e5/branch/default?svg=true)](https://ci.appveyor.com/project/paed01/catbox-azure-table/branch/default) [![Coverage Status](https://coveralls.io/repos/github/paed01/catbox-azure-table/badge.svg?branch=default)](https://coveralls.io/github/paed01/catbox-azure-table?branch=default) [![Dependency Status](https://david-dm.org/paed01/catbox-azure-table.svg)](https://david-dm.org/paed01/catbox-azure-table) [![peerDependency Status](https://david-dm.org/paed01/catbox-azure-table/peer-status.svg)](https://david-dm.org/paed01/catbox-azure-table#info=peerDependencies)
 
 Azure Table Storage adapter for [catbox](https://github.com/hapijs/catbox)
 
-Install **catbox-azure-table**:
-```
-npm install catbox-azure-table
-```
+| Version           | catbox version                                                |
+| ----------------- | ------------------------------------------------------------- |
+| 4.0.0             | [@hapi/catbox@11](https://www.npmjs.com/package/@hapi/catbox) |
+| 3.2.1             | [catbox@10](https://www.npmjs.com/package/catbox)             |
 
 ### Options
 
@@ -18,7 +18,7 @@ npm install catbox-azure-table
 
 ### Notes
 
-The default option for connection is set to use the [Azure Storage Emulator][1] (v4.4.0). This feature must be installed and started to run the tests.
+The default option for connection is set to use the [Azure Storage Emulator][1] (v5.10.0.0). This feature must be installed and started to run the tests.
 
 When setting or getting cache-items `segment` translates to Azure Table Storage `partitionKey`.
 
