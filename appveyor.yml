@@ -3,8 +3,8 @@
 
 environment:
   matrix:
-    - nodejs_version: 12
     - nodejs_version: 14
+    - nodejs_version: 16
   COVERALLS_REPO_TOKEN:
     secure: mXGYwR3ZrJJAjWBy8v13rFDU/0VR4Kuq/cBp2rOy8TcPwLdFQmF0Dn14rgSjJYhg
 
