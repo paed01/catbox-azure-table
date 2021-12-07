@@ -1,36 +1,37 @@
 'use strict';
 
+const {Client} = require('@hapi/catbox');
 const AzureTable = require('..');
 const ck = require('chronokinesis');
 const Lab = require('@hapi/lab');
-const MockAzure = require('./MockAzure');
+const nock = require('nock');
 const TableClient = require('../lib/TableClient');
-const {Client} = require('@hapi/catbox');
+
 const {Gc} = AzureTable;
 
 const lab = exports.lab = Lab.script();
-const {after, afterEach, before, beforeEach, describe, it} = lab;
-const {expect} = Lab.assertions;
+const {after, before, beforeEach, describe, it} = lab;
 
 const connection = process.env.AZURE_TABLE_CONN;
+const options = {
+  connection,
+  partition: 'unittestcachegc',
+  ttl_interval: 10000,
+  allowInsecureConnection: true,
+};
+
+const {partition, ttl_interval} = options;
 
 describe('AzureTable GC', () => {
-  const options = {
-    connection,
-    partition: 'unittestcachegc',
-    ttl_interval: 10000
-  };
-  const {partition, ttl_interval} = options;
-
-  let client;
+  let plugin;
 
   before(async () => {
-    client = new AzureTable(options);
-    await client.start();
+    plugin = new AzureTable(options);
+    await plugin.start();
   });
   after(async () => {
-    client.stop();
-    await TableClient(connection, partition).deleteTable();
+    await plugin.stop();
+    await new TableClient(connection, partition, null, {allowInsecureConnection: true}).deleteTable();
   });
   beforeEach(async () => {
     ck.reset();
@@ -38,15 +39,15 @@ describe('AzureTable GC', () => {
 
   describe('init', () => {
     it('throws if ttl_interval is not a number', () => {
-      expect(() => Gc(client.getClient())).to.throw(TypeError);
-      expect(() => Gc(client.getClient(), 'string')).to.throw(TypeError);
-      expect(() => Gc(client.getClient(), {})).to.throw(TypeError);
+      expect(() => Gc(plugin.getClient())).to.throw(TypeError);
+      expect(() => Gc(plugin.getClient(), 'string')).to.throw(TypeError);
+      expect(() => Gc(plugin.getClient(), {})).to.throw(TypeError);
     });
   });
 
   describe('start()', () => {
     it('starts timer', (flags) => {
-      const gc = new Gc(client.getClient(), ttl_interval);
+      const gc = new Gc(plugin.getClient(), ttl_interval);
       const timer = gc.start();
 
       flags.onCleanup = () => {
@@ -58,7 +59,7 @@ describe('AzureTable GC', () => {
     });
 
     it('once', (flags) => {
-      const gc = new Gc(client.getClient(), ttl_interval);
+      const gc = new Gc(plugin.getClient(), ttl_interval);
 
       const timer = gc.start();
       flags.onCleanup = () => {
@@ -72,7 +73,7 @@ describe('AzureTable GC', () => {
     });
 
     it('returns timer', (flags) => {
-      const gc = new Gc(client.getClient(), ttl_interval);
+      const gc = new Gc(plugin.getClient(), ttl_interval);
       const timer = gc.start();
       expect(timer).to.be.an.object();
 
@@ -85,7 +86,7 @@ describe('AzureTable GC', () => {
 
   describe('stop()', () => {
     it('stops timer', (flags) => {
-      const gc = new Gc(client.getClient(), ttl_interval);
+      const gc = new Gc(plugin.getClient(), ttl_interval);
       const timer = gc.start();
       flags.onCleanup = () => {
         timer.unref();
@@ -97,7 +98,7 @@ describe('AzureTable GC', () => {
     });
 
     it('does nothing if not started', () => {
-      const gc = new Gc(client.getClient(), ttl_interval);
+      const gc = new Gc(plugin.getClient(), ttl_interval);
       expect(gc.isReady()).to.be.false();
       gc.stop();
       expect(gc.isReady()).to.be.false();
@@ -106,11 +107,11 @@ describe('AzureTable GC', () => {
 
   describe('collect()', () => {
     it('deletes expired items', async () => {
-      const gc = client.gc;
+      const gc = plugin.gc;
       const segment = 'ttltest1';
 
       function set(id) {
-        return client.set({
+        return plugin.set({
           id,
           segment
         }, {
@@ -127,16 +128,98 @@ describe('AzureTable GC', () => {
       const nItems = await gc.collect();
       expect(nItems).to.equal(3);
 
-      const item = await client.getClient().get(segment, '3');
+      const item = await plugin.getClient().get(segment, '3');
       expect(item).to.be.null();
     });
 
+    it('takes 100 items at a time', async () => {
+      const gc = plugin.gc;
+      const segment = 'ttltest2';
+      const now = Date.now();
+
+      await plugin.getClient().client.submitTransaction(new Array(100).fill().map((_, idx) => {
+        return ['create', {
+          partitionKey: segment,
+          rowKey: 'p' + idx, 
+          ttl: 10000,
+          ttl_int: now + 10000,
+          gc: true,
+          item: '{}',
+        }];
+      }));
+
+      await plugin.getClient().client.submitTransaction(new Array(50).fill().map((_, idx) => {
+        return ['create', {
+          partitionKey: segment,
+          rowKey: 'q' + idx, 
+          ttl: 60000,
+          ttl_int: now + 60000,
+          gc: true,
+          item: '{}',
+        }];
+      }));
+
+      ck.travel(Date.now() + 11000);
+
+      const nItems1 = await gc.collect();
+      expect(nItems1).to.equal(100);
+
+      const item1 = await plugin.getClient().get(segment, 'p3');
+      expect(item1).to.be.null();
+
+      const item2 = await plugin.getClient().get(segment, 'q3');
+      expect(item2).to.not.be.null();
+
+      ck.travel(Date.now() + 61000);
+
+      const nItems2 = await gc.collect();
+      expect(nItems2).to.equal(50);
+
+      const item3 = await plugin.getClient().get(segment, 'q3');
+      expect(item3).to.be.null();
+    });
+
+    it('takes 100 items across segments', async () => {
+      const gc = plugin.gc;
+      const now = Date.now();
+
+      await plugin.getClient().client.submitTransaction(new Array(51).fill().map((_, idx) => {
+        return ['create', {
+          partitionKey: 'ttltest4',
+          rowKey: 'r' + idx, 
+          ttl: 10000,
+          ttl_int: now + 10000,
+          gc: true,
+          item: '{}',
+        }];
+      }));
+
+      await plugin.getClient().client.submitTransaction(new Array(51).fill().map((_, idx) => {
+        return ['create', {
+          partitionKey: 'ttltest5',
+          rowKey: 's' + idx, 
+          ttl: 10000,
+          ttl_int: now + 10000,
+          gc: true,
+          item: '{}',
+        }];
+      }));
+
+      ck.travel(Date.now() + 11000);
+
+      const nItems1 = await gc.collect();
+      expect(nItems1).to.equal(100);
+
+      const nItems2 = await gc.collect();
+      expect(nItems2).to.equal(2);
+    });
+
     it('ignores items that should not be collected -> gc == false', async () => {
-      const gc = client.gc;
+      const gc = plugin.gc;
       const segment = 'ttltest2';
 
       function set(id) {
-        return client.getClient().set(segment, id, {
+        return plugin.getClient().set(segment, id, {
           cacheme: true
         }, 50, false);
       }
@@ -149,12 +232,12 @@ describe('AzureTable GC', () => {
 
       await gc.collect();
 
-      const item = await client.getClient().get(segment, '4');
+      const item = await plugin.getClient().get(segment, '4');
       expect(item).to.exist();
     });
 
     it('returns 0 if no items to collect', async () => {
-      const gc = new Gc(client.getClient(), ttl_interval);
+      const gc = new Gc(plugin.getClient(), ttl_interval);
       const collected = await gc.collect();
       expect(collected).to.equal(0);
     });
@@ -162,33 +245,16 @@ describe('AzureTable GC', () => {
 });
 
 describe('Stop', () => {
-  let Azure;
-  beforeEach(async () => {
-    Azure = MockAzure('unittestcachegcstop');
-  });
-  afterEach(async () => {
-    Azure.reset();
-  });
-
   it('stops timer', async () => {
-    Azure.connection();
-    Azure.queryEntities(200, Azure.queryResponse());
-    Azure.executeBatch();
-    Azure.queryEntities(200, Azure.queryResponse());
-    Azure.executeBatch();
-    Azure.queryEntities(200, Azure.queryResponse());
-    Azure.executeBatch();
-
     const client = new Client(AzureTable, {
-      connection: Azure.connectionString,
-      partition: Azure.tableName,
-      ttl_interval: 41
+      ...options,
+      ttl_interval: 41,
     });
     const gc = client.connection.gc;
 
     let stopped = false;
     gc.on('collected', () => {
-      if (stopped) throw new Error('should have been stopped');
+      if (stopped) throw new Error('should NOT have been stopped');
       stopped = true;
       client.stop();
     });
@@ -201,25 +267,15 @@ describe('Stop', () => {
 });
 
 describe('Events', () => {
-  let Azure;
-  beforeEach(async () => {
-    Azure = MockAzure('unittestcachegcevents');
-    Azure.connection();
-  });
-  afterEach(async () => {
-    Azure.reset();
-  });
+  beforeEach(nock.cleanAll);
+  after(nock.cleanAll);
 
   it('emits collected event when Gc has collected', async () => {
     const client = new Client(AzureTable, {
-      connection: Azure.connectionString,
-      partition: Azure.tableName,
+      ...options,
       ttl_interval: 51
     });
     const gc = client.connection.gc;
-
-    Azure.queryEntities(200, Azure.queryResponse());
-    Azure.executeBatch();
 
     client.start();
 
@@ -229,22 +285,15 @@ describe('Events', () => {
     });
 
     client.stop();
-    expect(Azure.isComplete()).to.be.true();
     expect(n).to.be.a.number();
   });
 
   it('emits collected event at least 2 times', async () => {
     const client = new Client(AzureTable, {
-      connection: Azure.connectionString,
-      partition: Azure.tableName,
+      ...options,
       ttl_interval: 52
     });
     const gc = client.connection.gc;
-
-    Azure.queryEntities(200, Azure.queryResponse());
-    Azure.executeBatch();
-    Azure.queryEntities(200, Azure.queryResponse());
-    Azure.executeBatch();
 
     client.start();
 
@@ -259,38 +308,40 @@ describe('Events', () => {
 
     client.stop();
 
-    expect(Azure.isComplete()).to.be.true();
     expect(n1).to.be.a.number();
     expect(n2).to.be.a.number();
   });
 
-  it('emits error if Gc failed with StorageError', async () => {
+  it('emits error if Gc failed with RestError', async () => {
     const client = new Client(AzureTable, {
-      connection: Azure.connectionString,
-      partition: Azure.tableName,
+      ...options,
       ttl_interval: 53
     });
     const gc = client.connection.gc;
 
-    Azure.queryFailed(500);
     client.start();
+
+    nock(client.connection.getClient().client.url)
+      .get(`/${options.partition}()`)
+      .query(true)
+      .reply(() => {
+        return [400];
+      });
 
     await expect(new Promise((resolve, reject) => {
       gc.once('collected', resolve);
       gc.once('error', reject);
     })).to.reject();
+
+    client.stop();
   });
 
-  it('emits error and stops if not StorageError', async () => {
+  it('emits error and stops if TypeError', async () => {
     const client = new Client(AzureTable, {
-      connection: Azure.connectionString,
-      partition: Azure.tableName,
+      ...options,
       ttl_interval: 54
     });
     const gc = client.connection.gc;
-
-    Azure.queryEntities();
-    Azure.executeBatch();
 
     gc.on('collected', (n) => {
       n.a.b.c = 1;

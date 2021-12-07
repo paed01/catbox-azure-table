@@ -1,7 +1,7 @@
 {
   "name": "catbox-azure-table",
   "description": "Azure Table Storage adapter for catbox",
-  "version": "5.0.0",
+  "version": "6.0.0",
   "author": {
     "name": "Pål Edman",
     "url": "https://github.com/paed01"
@@ -29,21 +29,21 @@
     "lib/"
   ],
   "peerDependencies": {
-    "azure-storage": ">=2",
+    "@azure/data-tables": ">=13",
     "@hapi/catbox": ">=11"
   },
   "devDependencies": {
+    "@azure/data-tables": "^13.0.0",
     "@hapi/catbox": "^11.1.1",
     "@hapi/code": "^8.0.5",
     "@hapi/lab": "^24.4.0",
-    "azure-storage": "^2.10.5",
     "chronokinesis": "^3.1.2",
-    "coveralls": "^3.1.1",
+    "eslint": "^8.4.1",
     "nock": "^13.2.1"
   },
   "scripts": {
-    "test": "lab -cL -m 15000",
-    "test-cov": "lab -cL -m 15000 -r console -o stdout -r lcov -o coverage.lcov"
+    "test": "lab -cL",
+    "test-cov": "lab -cL -r console -o stdout -r lcov -o coverage.lcov"
   },
   "licenses": [
     {

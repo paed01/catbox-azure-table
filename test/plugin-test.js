@@ -1,56 +1,84 @@
 'use strict';
 
-const AzureStorage = require('azure-storage');
-const AzureTable = require('..');
+const CatboxAzureTable = require('..');
 const TableClient = require('../lib/TableClient');
-const {Client} = require('@hapi/catbox');
+const { TableClient: AzureTableClient } = require('@azure/data-tables');
+const { Client } = require('@hapi/catbox');
+const { expect } = require('@hapi/code');
 
-const {after, before, describe, fail, it} = exports.lab = require('@hapi/lab').script();
+const { after, before, describe, fail, it } = exports.lab = require('@hapi/lab').script();
 
 const options = {
   connection: process.env.AZURE_TABLE_CONN,
   partition: 'unittestcache',
-  ttl_interval: false
+  ttl_interval: false,
+  allowInsecureConnection: true,
 };
 
-const {connection, partition} = options;
+const { connection, partition } = options;
 
-describe('AzureTable', () => {
-  after(async () => {
-    await TableClient(connection, partition).deleteTable();
+describe('AzureTable plugin', () => {
+  after(() => {
+    return new TableClient(connection, partition, null, { allowInsecureConnection: true }).deleteTable();
   });
 
-  describe('#ctor', () => {
-    it('instantiate without configuration throws error', () => {
-      function fn() {
-        new AzureTable();
-      }
+  describe('options', () => {
+    it('options.client as AzureTableClient sets table client', () => {
+      const azureClient = AzureTableClient.fromConnectionString(options.connection, options.partition, { allowInsecureConnection: true });
+      const client = new Client(CatboxAzureTable, {
+        client: azureClient,
+        partition,
+        ttl_interval: false,
+      });
 
-      expect(fn).to.throw(Error);
+      expect(client.connection.getClient().client === azureClient).to.be.true();
     });
 
-    it('instantiate without partition throws an error', () => {
-      function fn() {
-        new AzureTable({
-          ttl_interval: false
+    it('options.client that is not an AzureTableClient throws', () => {
+      expect(() => {
+        new Client(CatboxAzureTable, {
+          client: {},
+          partition,
+          ttl_interval: 111,
         });
-      }
-
-      expect(fn).to.throw(Error, /partition/);
+      }).to.throw(TypeError, /instance of azure TableClient/);
     });
 
-    it('instantiate without connection string defaults to development storage', () => {
-      const client = AzureTable({
+    it('options connection url and credential works', async () => {
+      const azureClient = AzureTableClient.fromConnectionString(options.connection, options.partition, { allowInsecureConnection: true });
+
+      const client = new Client(CatboxAzureTable, {
+        ...options,
+        connection: azureClient.url,
+        credential: azureClient.credential,
+      });
+
+      await client.connection.getClient().connect();
+      await client.set({ id: 'withurl', segment: 'plugin' });
+
+      expect(new URL(client.connection.getClient().client.url).pathname).to.equal("/devstoreaccount1");
+    });
+
+    it('options without connection defaults to development storage', () => {
+      const client = new Client(CatboxAzureTable, {
         partition,
         ttl_interval: false
       });
 
-      expect(client.getClient().connectionString).to.equal('UseDevelopmentStorage=true;DevelopmentStorageProxyUri=http://127.0.0.1;');
+      expect(new URL(client.connection.getClient().client.url).pathname).to.equal("/devstoreaccount1");
     });
 
-    it('instantiate without ttl_interval throws an error', () => {
+    it('instantiate without no options complains about ttl_interval', () => {
       function fn() {
-        new AzureTable({
+        new Client(CatboxAzureTable);
+      }
+
+      expect(fn).to.throw(Error, /ttl_interval/);
+    });
+
+    it('instantiate with partitition only complains about ttl_interval', () => {
+      function fn() {
+        new Client(CatboxAzureTable, {
           partition: 'catbox'
         });
       }
@@ -60,7 +88,7 @@ describe('AzureTable', () => {
 
     it('instantiate with ttl_interval = true throws an error', () => {
       function fn() {
-        new AzureTable({
+        new Client(CatboxAzureTable, {
           partition: 'catbox',
           ttl_interval: true
         });
@@ -69,9 +97,9 @@ describe('AzureTable', () => {
       expect(fn).to.throw(Error, /ttl_interval/);
     });
 
-    it('instantiate with ttl_interval as string throws an error', () => {
+    it('instantiate with ttl_interval that is not a number throws', () => {
       function fn() {
-        new AzureTable({
+        new Client(CatboxAzureTable, {
           partition: 'catbox',
           ttl_interval: 'string'
         });
@@ -80,60 +108,27 @@ describe('AzureTable', () => {
       expect(fn).to.throw(Error, /ttl_interval/);
     });
 
-    it('instantiate with ttl_interval as an object throws an error', () => {
+    it('instantiate with negative ttl_interval throws', () => {
       function fn() {
-        new AzureTable({
+        new Client(CatboxAzureTable, {
           partition: 'catbox',
-          ttl_interval: {}
+          ttl_interval: -1
         });
       }
 
       expect(fn).to.throw(Error, /ttl_interval/);
-    });
-
-    it('instantiate with ttl_interval as a function throws an error', () => {
-      function fn() {
-        new AzureTable({
-          partition: 'catbox',
-          ttl_interval: () => {}
-        });
-      }
-
-      expect(fn).to.throw(Error, /ttl_interval/);
-    });
-
-    it('instantiate with ttl_interval as null throws an error', () => {
-      function fn() {
-        new AzureTable({
-          partition: 'catbox',
-          ttl_interval: null
-        });
-      }
-
-      expect(fn).to.throw(Error, /ttl_interval/);
-    });
-
-    it('instantiate with ttl_interval as number throws no error', () => {
-      function fn() {
-        new AzureTable({
-          partition: 'catbox',
-          ttl_interval: 111
-        });
-      }
-
-      expect(fn).to.not.throw();
     });
   });
 
   describe('start()', () => {
-    it('returns no error', async () => {
-      const client = new Client(AzureTable, options);
+    it('returns ready connection', async () => {
+      const client = new Client(CatboxAzureTable, options);
       await client.start();
       expect(client.isReady()).to.equal(true);
     });
 
     it('second call to start is ignored if started', async () => {
-      const client = new Client(AzureTable, options);
+      const client = new Client(CatboxAzureTable, options);
       await client.start();
       await client.start();
       expect(client.isReady()).to.equal(true);
@@ -141,7 +136,7 @@ describe('AzureTable', () => {
 
     it('throws if partition (tableName) does not match naming convention', () => {
       try {
-        new Client(AzureTable, {
+        new Client(CatboxAzureTable, {
           connection,
           partition: 'cache-me',
           ttl_interval: false
@@ -152,80 +147,64 @@ describe('AzureTable', () => {
     });
 
     it('throws error if connection string is malformatted', async () => {
-      const client = new Client(AzureTable, {
-        connection: 'somewhere',
-        partition,
-        ttl_interval: false
-      });
-
       try {
-        await client.start();
+        new Client(CatboxAzureTable, {
+          connection: 'somewhere',
+          partition,
+          ttl_interval: false
+        });
       } catch (err) {
-        expect(err).to.be.an.error(/Connection strings/i);
+        expect(err).to.be.an.error();
       }
     });
-
   });
 
   describe('interface', () => {
-    it('get without starting returns error', () => {
-      const client = new AzureTable(options);
-      return client.get({
-        id: '1',
-        segment: '2'
-      }).then(() => {
-        fail('Should not be ok');
-      }).catch((err) => {
-        expect(err).to.be.an.error(/Connection not started/i);
-      });
-    });
-
     it('set without starting returns error', async () => {
-      const client = new AzureTable(options);
-      return client.set({
-        id: '1',
-        segment: '2'
-      }, {
-        cacheme: true
-      }, Infinity).then(() => {
-        fail('Should not be ok');
-      }).catch((err) => {
-        expect(err).to.be.an.error(/Connection not started/i);
-      });
-    });
-
-    it('get with invalid id returns error', async () => {
-      const client = new AzureTable(options);
-      return client.start().then(() => {
-        client.get({
-          id: 'two\rlines',
-          segment: '2'
-        }).then(() => {
-          fail('Should not be ok');
-        }).catch((err) => {
-          expect(err).to.be.an.error(/invalid/i);
-        });
-      });
-    });
-
-    it('set with invalid id returns error', async () => {
-      const client = new AzureTable(options);
-      return client.start().then(() => {
-        client.set({
-          id: 'two\rlines',
-          segment: '2'
+      const client = new Client(CatboxAzureTable, options);
+      try {
+        await client.set({
+          id: 'item 2',
+          segment: 'unittest'
         }, {
           cacheme: true
-        }, Infinity).then(() => {
-          fail('Should not be ok');
-        }).catch((err) => {
-          expect(err).to.be.an.error(/invalid/i);
+        }, Infinity);
+        
+        fail('Should not be ok');
+      } catch (err) {
+        expect(err).to.match(/Disconnected/i);
+      }
+    });
+
+    it('get without starting returns error', async () => {
+      const client = new Client(CatboxAzureTable, options);
+      try {
+        await client.get({
+          id: '1',
+          segment: '2'
         });
-      });
+        
+        fail('Should not be ok');
+      } catch (err) {
+        expect(err).to.match(/Disconnected/i);
+      }
+    });
+
+    it('drop without started client throws', async () => {
+      const client = new Client(CatboxAzureTable, options);
+      try {
+        await client.drop({
+          id: 'item 4',
+          segment: 'unittest',
+        });
+        fail('Should not be ok');
+      } catch (err) {
+        expect(err).to.match(/Disconnected/i);
+      }
     });
 
     it('get non-existing item returns null', async () => {
-      const client = new AzureTable(options);
+      const client = new Client(CatboxAzureTable, options);
       await client.start();
       const data = await client.get({
         id: 'non-existing',
@@ -234,34 +213,48 @@ describe('AzureTable', () => {
       expect(data).to.equal(null);
     });
 
-    it('drop non-existing item returns null', async () => {
-      const client = new AzureTable(options);
+    it('drop item twice returns null', async () => {
+      const client = new CatboxAzureTable(options);
       await client.start();
 
-      const data = await client.drop({
-        id: 'non-existing',
+      await client.set({
+        id: 'to-drop',
+        segment: '2'
+      }, {
+        cacheme: true
+      });
+
+      const firstDrop = await client.drop({
+        id: 'to-drop',
         segment: '2'
       });
 
-      expect(data).to.equal(null);
+      expect(firstDrop).to.exist();
+
+      const secondDrop = await client.drop({
+        id: 'to-drop',
+        segment: '2'
+      });
+
+      expect(secondDrop).to.equal(null);
     });
 
     it('drop item with invalid id returns error', async () => {
-      const client = new AzureTable(options);
-      return client.start().then(() => {
-        client.drop({
-          id: 'two\rlines',
-          segment: '2'
-        }).then(() => {
-          fail('Should not be ok');
-        }).catch((err) => {
-          expect(err).to.be.an.error();
-        });
+      const client = new CatboxAzureTable(options);
+      await client.start();
+
+      client.drop({
+        id: 'two\rlines',
+        segment: '2'
+      }).then(() => {
+        fail('Should not be ok');
+      }).catch((err) => {
+        expect(err).to.be.an.error();
       });
     });
 
     it('supports empty id', async () => {
-      const client = new AzureTable(options);
+      const client = new CatboxAzureTable(options);
       await client.start();
 
       const key = {
@@ -276,7 +269,7 @@ describe('AzureTable', () => {
 
   describe('stop()', () => {
     it('twice returns no error', async () => {
-      const client = new Client(AzureTable, options);
+      const client = new Client(CatboxAzureTable, options);
       await client.start();
       client.stop();
       client.stop();
@@ -284,7 +277,7 @@ describe('AzureTable', () => {
     });
 
     it('can be stopped even if not started', () => {
-      const client = new Client(AzureTable, options);
+      const client = new Client(CatboxAzureTable, options);
       function fn() {
         client.stop();
       }
@@ -293,7 +286,7 @@ describe('AzureTable', () => {
     });
 
     it('can be started again', async () => {
-      const client = new Client(AzureTable, options);
+      const client = new Client(CatboxAzureTable, options);
       await client.start();
       client.stop();
       await client.start();
@@ -301,9 +294,8 @@ describe('AzureTable', () => {
     });
 
     it('stops Gc as well', async () => {
-      const client = new Client(AzureTable, {
-        connection,
-        partition,
+      const client = new Client(CatboxAzureTable, {
+        ...options,
         ttl_interval: 100
       });
       await client.start();
@@ -316,12 +308,12 @@ describe('AzureTable', () => {
 
   describe('isReady()', () => {
     it('returns false if not started', () => {
-      const client = new Client(AzureTable, options);
+      const client = new Client(CatboxAzureTable, options);
       expect(client.isReady()).to.not.be.true();
     });
 
     it('returns true if started', async () => {
-      const client = new Client(AzureTable, options);
+      const client = new Client(CatboxAzureTable, options);
       await client.start();
       expect(client.isReady()).to.be.true();
     });
@@ -329,27 +321,27 @@ describe('AzureTable', () => {
 
   describe('validateSegmentName()', () => {
     it('returns null if validated', () => {
-      const client = new Client(AzureTable, options);
+      const client = new Client(CatboxAzureTable, options);
       expect(client.validateSegmentName('table')).to.be.null();
     });
 
     it('returns Error if empty string', () => {
-      const client = new Client(AzureTable, options);
+      const client = new Client(CatboxAzureTable, options);
       expect(client.validateSegmentName('')).to.be.instanceOf(Error);
     });
 
     it('returns Error if nothing passed', () => {
-      const client = new Client(AzureTable, options);
+      const client = new Client(CatboxAzureTable, options);
       expect(client.validateSegmentName()).to.be.instanceOf(Error);
     });
 
     it('returns Error if null', () => {
-      const client = new Client(AzureTable, options);
+      const client = new Client(CatboxAzureTable, options);
       expect(client.validateSegmentName(null)).to.be.instanceOf(Error);
     });
 
     it('returns Error if \\0', () => {
-      const client = new Client(AzureTable, options);
+      const client = new Client(CatboxAzureTable, options);
       expect(client.validateSegmentName('\0')).to.be.instanceOf(Error);
     });
   });
@@ -358,24 +350,8 @@ describe('AzureTable', () => {
     let client;
 
     before(async () => {
-      client = new Client(AzureTable, options);
+      client = new Client(CatboxAzureTable, options);
       await client.start();
-    });
-
-    it('without started client returns error in callback', async () => {
-      const rawclient = new AzureTable(options);
-      const d = {
-        cache: true
-      };
-      const key = {
-        id: 'item 2',
-        segment: 'unittest'
-      };
-      return rawclient.set(key, d, 10000).then(() => {
-        fail('Should not be ok');
-      }).catch((err) => {
-        expect(err).to.be.an.error(/not started/);
-      });
     });
 
     it('puts object in cache', async () => {
@@ -447,21 +423,8 @@ describe('AzureTable', () => {
   describe('get()', () => {
     let client;
     before(async () => {
-      client = new Client(AzureTable, options);
+      client = new Client(CatboxAzureTable, options);
       await client.start();
-    });
-
-    it('without started client returns error in callback', async () => {
-      const rawclient = new AzureTable(options);
-      const key = {
-        id: 'item 2',
-        segment: 'unittest'
-      };
-      return rawclient.get(key).then(() => {
-        fail('Should not be ok');
-      }).catch((err) => {
-        expect(err).to.be.an.error(/not started/);
-      });
     });
 
     it('fetches object from cache', async () => {
@@ -521,16 +484,15 @@ describe('AzureTable', () => {
         id: 'Wrongly formatted 1',
         segment: 'unittest'
       };
-      const entGen = AzureStorage.TableUtilities.entityGenerator;
       const entity = {
-        PartitionKey: entGen.String(key.segment),
-        RowKey: entGen.String(key.id),
-        item: entGen.String('[Object weee]'),
-        ttl: entGen.Int64(10)
+        partitionKey: key.segment,
+        rowKey: key.id,
+        item: '[Object weee]',
+        ttl: 10,
       };
 
-      const rawclient = client.connection.getClient();
-      await rawclient.insert(entity);
+      const rawclient = client.connection.getClient().client;
+      await rawclient.upsertEntity(entity);
 
       try {
         await client.get(key);
@@ -573,7 +535,7 @@ describe('AzureTable', () => {
   describe('drop()', () => {
     let client;
     before(async () => {
-      client = new Client(AzureTable, options);
+      client = new Client(CatboxAzureTable, options);
       await client.start();
     });
 
@@ -615,21 +577,6 @@ describe('AzureTable', () => {
         segment: 'unittest-non-existing'
       };
       await client.drop(key);
-    });
-
-    it('without started client throws', async () => {
-      const rawclient = new AzureTable(options);
-      const key = {
-        id: 'item 4',
-        segment: 'unittest'
-      };
-
-      try {
-        await rawclient.drop(key);
-      } catch (err) {
-        var dropErr = err; // eslint-disable-line
-      }
-      expect(dropErr).to.exist();
     });
   });
 });
