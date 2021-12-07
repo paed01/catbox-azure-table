@@ -4,22 +4,19 @@
 environment:
   matrix:
     - nodejs_version: 14
-    - nodejs_version: 16
+    # - nodejs_version: 16
   COVERALLS_REPO_TOKEN:
-    secure: mXGYwR3ZrJJAjWBy8v13rFDU/0VR4Kuq/cBp2rOy8TcPwLdFQmF0Dn14rgSjJYhg
+    secure: bKZWQl7f7Z2FWn1KA89+EBwqFyQguAnwPouvDXPsppbVV/BKAVhKsb1obN3Tju2N
 
 install:
-  - ps: Start-FileDownload 'https://download.visualstudio.microsoft.com/download/pr/87453e3b-79ac-4d29-a70e-2a37d39f2b12/f0e339a0a189a0d315f75a72f0c9bd5e/microsoftazurestorageemulator.msi'
-  - ps: msiexec /i MicrosoftAzureStorageEmulator.msi /quiet /qn /norestart /log install.log
   - ps: Install-Product node $env:nodejs_version
+  - npm install -g azurite
   - npm install
 
 build: off
 
 before_test:
-  - ps: '& "${Env:ProgramFiles(x86)}\Microsoft SDKs\Azure\Storage Emulator\AzureStorageEmulator.exe" start'
-  - ps: '& "${Env:ProgramFiles(x86)}\Microsoft SDKs\Azure\Storage Emulator\AzureStorageEmulator.exe" status'
-  - ps: '& "${Env:ProgramFiles(x86)}\Microsoft SDKs\Azure\Storage Emulator\AzureStorageEmulator.exe" clear table'
+  - ps: $AzuriteProcess = Start-Process azurite-table.cmd -PassThru
 
 test_script:
   - node --version
@@ -27,4 +24,6 @@ test_script:
   - npm run test-cov
 
 after_test:
+  - ps: Stop-Process $AzuriteProcess
+  - npm install coveralls
   - node ./node_modules/coveralls/bin/coveralls.js < ./coverage.lcov
