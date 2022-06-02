@@ -5,12 +5,13 @@ catbox-azure-table
 
 Azure Table Storage adapter for [catbox](https://github.com/hapijs/catbox)
 
-| Version           | catbox version                                                   |
-| ----------------- | ---------------------------------------------------------------- |
-| 6.0.0             | [@azure/data-tables][2]                                          |
-| 5.0.0             | @hapi/catbox@11 and azure-storage@2 defined as peer dependencies |
-| 4.0.0             | [@hapi/catbox@11](https://www.npmjs.com/package/@hapi/catbox)    |
-| 3.2.1             | [catbox@10](https://www.npmjs.com/package/catbox)                |
+| Version           | catbox version                                                             |
+| ----------------- | -------------------------------------------------------------------------- |
+| 7.0.0             | node >= 14                                                                 |
+| 6.0.0             | [@azure/data-tables][2]                                                    |
+| 5.0.0             | @hapi/catbox@11 and azure-storage@2 defined as peer dependencies           |
+| 4.0.0             | [@hapi/catbox@11](https://www.npmjs.com/package/@hapi/catbox)              |
+| 3.2.1             | [catbox@10](https://www.npmjs.com/package/catbox)                          |
 
 # Options
 
